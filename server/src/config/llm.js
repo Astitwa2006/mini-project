@@ -4,8 +4,9 @@ import { env } from './env.js';
 const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
 
 /**
- * Returns the configured Gemini generative model.
- * Using gemini-2.0-flash — the latest free-tier model.
+ * Returns the configured Gemini generative model (see GEMINI_MODEL in
+ * .env.example for which model and why — free-tier daily quotas vary
+ * wildly between models, and some older ones are fully retired).
  */
 export function getGeminiModel() {
   return genAI.getGenerativeModel({

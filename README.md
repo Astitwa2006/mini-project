@@ -1,6 +1,6 @@
 # QuizRush ⚡ — Real-Time Multiplayer Tech Trivia
 
-> Compete with friends on live tech questions generated from today's news, powered by Gemini 2.0 Flash + Socket.io.
+> Compete with friends on live tech questions generated from today's news, powered by Gemini + Socket.io.
 
 ---
 
@@ -14,7 +14,7 @@
 | Database | Supabase (PostgreSQL) |
 | Cache | Redis (ioredis) |
 | Auth | Google OAuth via Supabase |
-| LLM | Gemini 2.0 Flash |
+| LLM | Gemini (model configurable via `GEMINI_MODEL`, see `.env.example`) |
 | Questions | Tech RSS Feeds → Gemini LLM Pipeline |
 | Testing | Jest |
 
@@ -92,7 +92,7 @@ npm test             # jest suite
 
 ## How It Works
 
-1. **RSS → LLM Pipeline**: Every 15 minutes, the server fetches tech news RSS feeds filtered by topic, sends each article to Gemini 2.0 Flash with a structured JSON prompt, and caches the generated quiz questions in Redis.
+1. **RSS → LLM Pipeline**: The moment a room is created, the server fetches tech news RSS feeds for the host's chosen topics (in parallel) and batches several articles per Gemini call to generate quiz questions efficiently, caching the pool in Redis (`RSS_REFRESH_INTERVAL_MINUTES`) so later rooms with the same topics reuse it instantly instead of re-generating.
 
 2. **Room Creation**: Host picks topics (AI/ML, Cloud, etc.), difficulty, and question count. A 6-char room code + shareable link are generated.
 

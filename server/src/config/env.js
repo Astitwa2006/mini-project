@@ -16,10 +16,10 @@ const envSchema = z.object({
 
   // Gemini
   GEMINI_API_KEY: z.string().min(1),
-  GEMINI_MODEL: z.string().default('gemini-1.5-flash'),
+  GEMINI_MODEL: z.string().default('gemini-2.5-flash-lite'),
 
   // Question pipeline
-  RSS_REFRESH_INTERVAL_MINUTES: z.string().default('15'),
+  RSS_REFRESH_INTERVAL_MINUTES: z.string().default('60'),
   DEFAULT_QUESTIONS_PER_GAME: z.string().default('10'),
   MAX_QUESTIONS_PER_GAME: z.string().default('20'),
   QUESTION_TIME_LIMIT_SECONDS: z.string().default('30'),

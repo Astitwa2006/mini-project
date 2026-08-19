@@ -112,6 +112,22 @@ create policy "Scores are public"          on public.scores for select using (tr
 create policy "Chat is public"             on public.chat_messages for select using (true);
 create policy "Auth users can chat"        on public.chat_messages for insert with check (auth.role() = 'authenticated');
 
+-- ── Grants ───────────────────────────────────────────────────────
+-- Supabase's `anon`/`authenticated`/`service_role` roles normally inherit
+-- default privileges on the `public` schema automatically. If you're seeing
+-- "permission denied for table X" even though RLS policies look correct
+-- (RLS and GRANTs are separate layers — service_role bypasses RLS but
+-- still needs a table-level GRANT), run this block once to fix it:
+grant usage on schema public to anon, authenticated, service_role;
+grant all      on all tables    in schema public to service_role;
+grant select, insert, update, delete
+  on public.profiles, public.rooms, public.game_sessions, public.scores, public.chat_messages
+  to authenticated;
+grant select
+  on public.profiles, public.rooms, public.scores, public.chat_messages
+  to anon;
+grant execute on function public.increment_total_score(uuid, int) to service_role;
+
 -- ── Indexes ──────────────────────────────────────────────────────
 create index idx_rooms_code           on public.rooms(code);
 create index idx_rooms_status         on public.rooms(status);

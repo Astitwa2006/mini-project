@@ -1,7 +1,6 @@
 import express from 'express';
 import { createServer } from 'http';
 import cors from 'cors';
-import cron from 'node-cron';
 import 'dotenv/config';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -12,7 +11,7 @@ const __dirname = path.dirname(__filename);
 import { env } from './config/env.js';
 import { getRedisClient, closeRedis } from './config/redis.js';
 import { createSocketServer } from './socket/index.js';
-import { prewarmCommonTopics } from './services/question.service.js';
+import { prewarmDefaultTopic } from './services/question.service.js';
 import { errorHandler } from './middleware/errorHandler.middleware.js';
 import { rateLimiter } from './middleware/rateLimit.middleware.js';
 
@@ -58,14 +57,12 @@ async function start() {
   // Verify Redis connection
   getRedisClient();
 
-  // Pre-warm popular question pools on startup
-  await prewarmCommonTopics();
-
-  // Refresh question pool every N minutes via cron
-  cron.schedule(`*/${env.RSS_REFRESH_INTERVAL_MINUTES} * * * *`, async () => {
-    logger.info('Cron: refreshing question pools...');
-    await prewarmCommonTopics();
-  });
+  // Warm just one default topic pool in the background so the very first
+  // room isn't cold. Everything else is generated on demand per room (see
+  // room:create handler) and cached for RSS_REFRESH_INTERVAL_MINUTES —
+  // deliberately not on a recurring cron, since regenerating pools nobody
+  // is using wastes LLM quota and bloats the DB for no benefit.
+  prewarmDefaultTopic();
 
   httpServer.listen(env.PORT, () => {
     logger.info(`🚀 Server running on http://localhost:${env.PORT}`);

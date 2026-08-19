@@ -91,10 +91,16 @@ export async function startGame(io, room) {
     await updateRoomStatus(roomId, PHASE.FINISHED);
     const finalLeaderboard = await persistFinalScores(roomId, session.id);
 
-    // Update session end time
+    // Mark the session ended and drop the stored question snapshot — it
+    // was only ever needed while the game was live (Redis already serves
+    // that during play). Leaving it in Supabase permanently is what fills
+    // a free-tier DB fastest, since every game writes a full JSON copy of
+    // its questions; nulling it here keeps the lightweight session/score
+    // history (used for the leaderboard and game history endpoints) while
+    // discarding the heavy part the moment it's no longer needed.
     await supabaseAdmin
       .from('game_sessions')
-      .update({ ended_at: new Date().toISOString() })
+      .update({ ended_at: new Date().toISOString(), questions: null })
       .eq('id', session.id);
 
     io.to(socketRoom).emit('game:finished', { leaderboard: finalLeaderboard });

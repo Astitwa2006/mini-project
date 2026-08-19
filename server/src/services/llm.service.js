@@ -35,9 +35,10 @@ Rules:
  * Converts a single article into a quiz question using Gemini 2.0 Flash.
  *
  * @param {object} article - { title, summary, topic, url }
+ * @param {number} retriesLeft - internal: retries remaining for transient errors
  * @returns {object|null} Parsed question object or null if generation failed
  */
-export async function generateQuestionFromArticle(article) {
+export async function generateQuestionFromArticle(article, retriesLeft = 1) {
   try {
     const model = getGeminiModel();
     const prompt = `${SYSTEM_PROMPT}\n\n${USER_PROMPT_TEMPLATE(article)}`;
@@ -91,34 +92,61 @@ export async function generateQuestionFromArticle(article) {
       generatedAt: new Date().toISOString(),
     };
   } catch (err) {
+    // Gemini's free tier occasionally 503s under load ("model overloaded") —
+    // that's transient, so retry once before giving up on this article.
+    const isTransient = /503|overloaded|Service Unavailable/i.test(err.message || '');
+    if (isTransient && retriesLeft > 0) {
+      await new Promise((r) => setTimeout(r, 800));
+      return generateQuestionFromArticle(article, retriesLeft - 1);
+    }
     logger.error(`LLM question generation failed for "${article.title}":`, err.message);
     return null;
   }
 }
 
 /**
- * Batch-generates quiz questions from multiple articles.
- * Processes them sequentially to respect API rate limits.
+ * Runs async worker `fn` over `items` with at most `limit` in flight at once.
+ */
+async function mapWithConcurrency(items, limit, fn) {
+  const results = new Array(items.length);
+  let nextIndex = 0;
+
+  async function worker() {
+    while (nextIndex < items.length) {
+      const i = nextIndex++;
+      results[i] = await fn(items[i], i);
+    }
+  }
+
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+  return results;
+}
+
+/**
+ * Batch-generates quiz questions from multiple articles, running several
+ * Gemini calls concurrently instead of one-at-a-time. Concurrency is capped
+ * (rather than firing all requests at once) to stay under free-tier rate
+ * limits while still cutting wall-clock time dramatically.
  *
  * @param {object[]} articles
- * @param {number}   targetCount - Stop after this many valid questions
+ * @param {number}   targetCount - Stop once this many valid questions exist
+ * @param {number}   concurrency - Max simultaneous Gemini calls
  */
-export async function batchGenerateQuestions(articles, targetCount = 20) {
+export async function batchGenerateQuestions(articles, targetCount = 20, concurrency = 4) {
+  // Cap how many articles we're willing to burn calls on — enough headroom
+  // for some to fail/be rejected, without generating way more than needed.
+  const candidates = articles.slice(0, targetCount * 2);
   const questions = [];
 
-  for (const article of articles) {
-    if (questions.length >= targetCount) break;
-
+  await mapWithConcurrency(candidates, concurrency, async (article) => {
+    if (questions.length >= targetCount) return; // already have enough
     const q = await generateQuestionFromArticle(article);
-    if (q) {
+    if (q && questions.length < targetCount) {
       questions.push(q);
       logger.debug(`✅ Generated question [${questions.length}/${targetCount}]: ${q.topic}`);
     }
+  });
 
-    // Small delay to avoid hitting rate limits
-    await new Promise((r) => setTimeout(r, 300));
-  }
-
-  logger.info(`LLM batch complete: ${questions.length} questions from ${articles.length} articles`);
+  logger.info(`LLM batch complete: ${questions.length} questions from ${candidates.length} articles (concurrency=${concurrency})`);
   return questions;
 }

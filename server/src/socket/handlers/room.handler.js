@@ -1,5 +1,6 @@
 import { getRoomByCode, addPlayerToRoom, removePlayerFromRoom } from '../../services/room.service.js';
 import { createRoom } from '../../services/room.service.js';
+import { warmQuestionPool } from '../../services/question.service.js';
 import { env } from '../../config/env.js';
 import { logger } from '../../utils/logger.js';
 
@@ -41,6 +42,12 @@ export function registerRoomHandlers(io, socket) {
         shareUrl: room.shareUrl,
         ...room,
       });
+
+      // Kick off question generation now (topics are already known) so the
+      // pipeline runs in the background while players join the waiting
+      // room, instead of only starting — and making everyone wait — once
+      // the host clicks "Start Game".
+      warmQuestionPool(room.topics, room.difficulty, room.questionCount);
 
       logger.info(`Room ${room.code} created by ${user.username}`);
     } catch (err) {

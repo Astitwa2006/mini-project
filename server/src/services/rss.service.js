@@ -64,41 +64,50 @@ export const TOPIC_META = {
  * Fetches and parses articles from the RSS feeds of the given topics.
  * Returns an array of normalized article objects.
  *
+ * All feeds across all requested topics are fetched concurrently — each
+ * feed is an independent HTTP request, so there's no reason to wait on
+ * one before starting the next. This is the single biggest lever on
+ * pipeline latency: N feeds sequentially at ~1-2s each vs. all of them
+ * in parallel bounded by the slowest one.
+ *
  * @param {string[]} topics - Array of topic slugs
  * @param {number}   maxPerFeed - Max articles to pull per feed
  */
 export async function fetchArticlesByTopics(topics = [], maxPerFeed = 5) {
-  const results = [];
-
-  for (const topic of topics) {
+  const jobs = topics.flatMap((topic) => {
     const feeds = TOPIC_FEEDS[topic];
     if (!feeds) {
       logger.warn(`Unknown topic slug: "${topic}"`);
-      continue;
+      return [];
     }
+    return feeds.map((feedUrl) => ({ topic, feedUrl }));
+  });
 
-    for (const feedUrl of feeds) {
-      try {
-        logger.debug(`Fetching RSS: ${feedUrl}`);
-        const feed = await parser.parseURL(feedUrl);
+  const settled = await Promise.allSettled(
+    jobs.map(async ({ topic, feedUrl }) => {
+      logger.debug(`Fetching RSS: ${feedUrl}`);
+      const feed = await parser.parseURL(feedUrl);
 
-        const articles = feed.items.slice(0, maxPerFeed).map((item) => ({
-          topic,
-          title:     item.title?.trim()   || '',
-          summary:   item.contentSnippet?.trim()
-                     || item.content?.replace(/<[^>]+>/g, '').slice(0, 300).trim()
-                     || '',
-          url:       item.link || '',
-          published: item.pubDate || item.isoDate || '',
-          source:    feed.title || feedUrl,
-        }));
+      return feed.items.slice(0, maxPerFeed).map((item) => ({
+        topic,
+        title:     item.title?.trim()   || '',
+        summary:   item.contentSnippet?.trim()
+                   || item.content?.replace(/<[^>]+>/g, '').slice(0, 300).trim()
+                   || '',
+        url:       item.link || '',
+        published: item.pubDate || item.isoDate || '',
+        source:    feed.title || feedUrl,
+      }));
+    })
+  );
 
-        // Filter out articles with too little content for LLM to work with
-        results.push(...articles.filter((a) => a.title.length > 20 && a.summary.length > 30));
-      } catch (err) {
-        logger.warn(`RSS fetch failed for ${feedUrl}: ${err.message}`);
-        // Continue with other feeds on failure
-      }
+  const results = [];
+  for (let i = 0; i < settled.length; i++) {
+    const outcome = settled[i];
+    if (outcome.status === 'fulfilled') {
+      results.push(...outcome.value.filter((a) => a.title.length > 20 && a.summary.length > 30));
+    } else {
+      logger.warn(`RSS fetch failed for ${jobs[i].feedUrl}: ${outcome.reason?.message}`);
     }
   }
 

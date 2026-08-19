@@ -6,15 +6,12 @@ import Button from '../components/ui/Button.jsx';
 import FinalResults from '../components/scoreboard/FinalResults.jsx';
 import { formatScore, ordinal } from '../utils/helpers.js';
 
-const PODIUM_EMOJIS = ['🥇', '🥈', '🥉'];
-
 export default function ResultsPage() {
   const { leaderboard, reset } = useGame();
   const { user } = useAuth();
   const navigate = useNavigate();
 
   const myResult = leaderboard.find((p) => p.id === user?.id);
-  const top3     = leaderboard.slice(0, 3);
 
   function handlePlayAgain() {
     reset();

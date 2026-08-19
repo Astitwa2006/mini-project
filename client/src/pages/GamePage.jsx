@@ -11,14 +11,13 @@ import TopicBadge from '../components/game/TopicBadge.jsx';
 import AnswerFeedback from '../components/game/AnswerFeedback.jsx';
 import LiveLeaderboard from '../components/scoreboard/LiveLeaderboard.jsx';
 import { useNavigate } from 'react-router-dom';
-import { formatScore } from '../utils/helpers.js';
 
 export default function GamePage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const {
     phase, room, currentQuestion, myAnswer, reveal, leaderboard, chat,
-    totalQuestions, questionTime, dispatch,
+    totalQuestions, questionTime,
   } = useGame();
 
   const { submitAnswer, sendChat } = useGameSocket();

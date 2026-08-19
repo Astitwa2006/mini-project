@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { formatScore, ordinal } from '../../utils/helpers.js';
+import { formatScore } from '../../utils/helpers.js';
 
 export default function LiveLeaderboard({ leaderboard = [], myId }) {
   return (

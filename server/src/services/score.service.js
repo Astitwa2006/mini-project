@@ -36,11 +36,13 @@ export async function recordAnswer({ roomId, questionIndex, playerId, selectedOp
   existing[playerId] = { selectedOption, isCorrect, points, timeRemainingMs };
   await cache.set(answersKey, existing, ANSWERS_TTL);
 
-  // Update player score in room state
+  // Update player score (and correct-answer tally) in room state
   if (isCorrect) {
     const state = await cache.get(stateKey);
     if (state) {
       state.scores[playerId] = (state.scores[playerId] || 0) + points;
+      state.correctCounts = state.correctCounts || {};
+      state.correctCounts[playerId] = (state.correctCounts[playerId] || 0) + 1;
       await cache.set(stateKey, state, ANSWERS_TTL);
     }
   }
@@ -70,7 +72,11 @@ export async function getLeaderboard(roomId) {
   if (!state) return [];
 
   return state.players
-    .map((p) => ({ ...p, score: state.scores[p.id] || 0 }))
+    .map((p) => ({
+      ...p,
+      score:        state.scores[p.id] || 0,
+      correctCount: state.correctCounts?.[p.id] || 0,
+    }))
     .sort((a, b) => b.score - a.score)
     .map((p, i) => ({ ...p, rank: i + 1 }));
 }

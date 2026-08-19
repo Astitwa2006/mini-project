@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Real-Time Multiplayer Quiz Game",
   "private": true,
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "workspaces": [
     "client",
     "server",

@@ -46,7 +46,7 @@ export default function LandingPage() {
           </h1>
 
           <p className="text-xl text-slate-400 max-w-xl mx-auto leading-relaxed">
-            Compete with friends on fresh tech questions generated from today's news.
+            Compete with friends on fresh tech questions generated from today&rsquo;s news.
             No stale databases — just live knowledge battles.
           </p>
 

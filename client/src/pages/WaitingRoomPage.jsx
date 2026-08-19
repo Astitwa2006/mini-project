@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useGame } from '../context/GameContext.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useGameSocket } from '../hooks/useGameSocket.js';
 import { useSocket } from '../context/SocketContext.jsx';
-import { SOCKET_EVENTS, TOPICS, DIFFICULTY, GAME_PHASE } from '../utils/constants.js';
+import { SOCKET_EVENTS, TOPICS, DIFFICULTY } from '../utils/constants.js';
 import Button from '../components/ui/Button.jsx';
 import ShareRoomModal from '../components/lobby/ShareRoomModal.jsx';
 import PlayerList from '../components/lobby/PlayerList.jsx';
@@ -15,7 +15,7 @@ export default function WaitingRoomPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { room, phase, dispatch } = useGame();
+  const { room, dispatch } = useGame();
   const { socket } = useSocket();
   const { startGame, leaveRoom } = useGameSocket();
   const [shareOpen, setShareOpen] = useState(false);

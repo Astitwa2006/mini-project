@@ -1,0 +1,42 @@
+# Local production-like stack: Redis + the built app in one container.
+# For day-to-day development with hot reload, use `npm run dev` instead —
+# this is for testing the actual deployment image before shipping it.
+#
+# Usage:
+#   1. Fill in server/.env with real Supabase/Gemini credentials
+#      (REDIS_URL below already points at the "redis" service).
+#   2. docker compose up --build
+#   3. App available at http://localhost:3001
+
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - server/.env
+    environment:
+      # Overrides server/.env so the app talks to the "redis" service name
+      # instead of localhost, regardless of what's in the env file.
+      REDIS_URL: redis://redis:6379
+      NODE_ENV: production
+    ports:
+      - "3001:3001"
+    depends_on:
+      redis:
+        condition: service_healthy
+
+volumes:
+  redis-data:

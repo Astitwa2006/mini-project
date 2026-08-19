@@ -10,7 +10,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 import { env } from './config/env.js';
-import { getRedisClient } from './config/redis.js';
+import { getRedisClient, closeRedis } from './config/redis.js';
 import { createSocketServer } from './socket/index.js';
 import { prewarmCommonTopics } from './services/question.service.js';
 import { errorHandler } from './middleware/errorHandler.middleware.js';
@@ -77,3 +77,21 @@ start().catch((err) => {
   logger.error('Failed to start server:', err);
   process.exit(1);
 });
+
+// ── Graceful shutdown ─────────────────────────────────────────────
+// PaaS platforms (Render, Railway, Fly.io, etc.) send SIGTERM before
+// force-killing a container during redeploys/scaling — stop accepting
+// new connections and close Redis cleanly instead of dropping games mid-flight.
+async function shutdown(signal) {
+  logger.info(`${signal} received — shutting down gracefully...`);
+  httpServer.close(async () => {
+    await closeRedis();
+    logger.info('Shutdown complete.');
+    process.exit(0);
+  });
+  // Force-exit if close hangs (e.g. sockets refusing to drain)
+  setTimeout(() => process.exit(1), 10000).unref();
+}
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT',  () => shutdown('SIGINT'));

@@ -64,14 +64,13 @@ export function registerRoomHandlers(io, socket) {
       socket.join(`room:${room.id}`);
       socket.data.roomId = room.id;
 
-      // Confirm join to the joiner
+      // Confirm join to the joiner — send the full room state (mirrors room:created)
+      // so the waiting-room UI has hostId/maxPlayers/questionCount/difficulty too.
       socket.emit('room:joined', {
+        ...updatedRoom,
         roomId:   room.id,
         code:     room.code,
         shareUrl: `${env.CLIENT_URL}/join/${room.code}`,
-        players:  updatedRoom.players,
-        topics:   room.topics,
-        status:   room.status,
       });
 
       // Notify everyone else

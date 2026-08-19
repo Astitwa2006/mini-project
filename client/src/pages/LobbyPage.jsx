@@ -33,7 +33,7 @@ export default function LobbyPage() {
     if (!topics.length) return;
     setCreating(true);
 
-    socket.emit(SOCKET_EVENTS.ROOM_CREATE, { topics, questionCount, difficulty, maxPlayers });
+    createRoom({ topics, questionCount, difficulty, maxPlayers });
 
     socket.once(SOCKET_EVENTS.ROOM_CREATED, (roomData) => {
       dispatch({ type: 'SET_ROOM', payload: roomData });

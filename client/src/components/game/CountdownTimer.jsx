@@ -1,9 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { TOPICS } from '../../utils/constants.js';
 import { useTimer } from '../../hooks/useTimer.js';
-import { msToCountdown } from '../../utils/helpers.js';
 
-export default function CountdownTimer({ timeLimitMs, running, onExpire, questionIndex }) {
+export default function CountdownTimer({ timeLimitMs, running, onExpire }) {
   const { remainingMs, progress } = useTimer(timeLimitMs, running, onExpire);
 
   const isUrgent = progress < 0.3;

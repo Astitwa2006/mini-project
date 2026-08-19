@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { api } from '../services/api.js';
 import { useGameSocket } from '../hooks/useGameSocket.js';
@@ -19,11 +19,10 @@ import Loader from '../components/ui/Loader.jsx';
 export default function JoinPage() {
   const { code } = useParams();
   const navigate  = useNavigate();
-  const location  = useLocation();
   const { user, loading } = useAuth();
   const { socket } = useSocket();
   const { dispatch } = useGame();
-  const { joinRoom } = useGameSocket();
+  useGameSocket(); // keeps room/game listeners live during the brief join window
 
   useEffect(() => {
     if (loading) return;
@@ -59,7 +58,7 @@ export default function JoinPage() {
         alert('Room not found or has expired.');
         navigate('/lobby', { replace: true });
       });
-  }, [user, loading, socket, code]);
+  }, [user, loading, socket, code, dispatch, navigate]);
 
   return <Loader fullScreen />;
 }

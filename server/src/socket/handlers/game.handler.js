@@ -1,7 +1,6 @@
 import { getRoomById } from '../../services/room.service.js';
 import { recordAnswer } from '../../services/score.service.js';
 import { startGame } from '../gameEngine.js';
-import { env } from '../../config/env.js';
 import { logger } from '../../utils/logger.js';
 
 export function registerGameHandlers(io, socket) {

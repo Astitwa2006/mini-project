@@ -41,6 +41,7 @@ export async function createRoom({ hostId, topics, questionCount, difficulty, ma
     players:       [],
     currentQuestion: 0,
     scores:        {},
+    correctCounts: {},
     shareUrl:      `${env.CLIENT_URL}/join/${code}`,
   };
 
@@ -90,6 +91,8 @@ export async function addPlayerToRoom(roomId, player) {
   if (!alreadyIn) {
     state.players.push(player);
     state.scores[player.id] = 0;
+    state.correctCounts = state.correctCounts || {};
+    state.correctCounts[player.id] = 0;
     await cache.set(`room:${roomId}:state`, state, ROOM_TTL);
   }
 

@@ -1,6 +1,5 @@
-import { cache } from '../services/cache.service.js';
 import { lockQuestionsForRoom, clearRoomQuestions } from '../services/question.service.js';
-import { getLeaderboard, persistFinalScores, recordAnswer, allPlayersAnswered } from '../services/score.service.js';
+import { getLeaderboard, persistFinalScores, allPlayersAnswered } from '../services/score.service.js';
 import { updateRoomStatus, cleanupRoom } from '../services/room.service.js';
 import { supabaseAdmin } from '../config/supabase.js';
 import { env } from '../config/env.js';

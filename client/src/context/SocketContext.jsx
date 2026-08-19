@@ -19,12 +19,18 @@ export function SocketProvider({ children }) {
     const socket = getSocket(token);
     socketRef.current = socket;
 
-    socket.on('connect',    () => setConnected(true));
-    socket.on('disconnect', () => setConnected(false));
+    const handleConnect    = () => setConnected(true);
+    const handleDisconnect = () => setConnected(false);
+    socket.on('connect',    handleConnect);
+    socket.on('disconnect', handleDisconnect);
 
+    // Pass the exact handler refs — socket.off(event) with no handler
+    // would remove EVERY listener for that event (including the
+    // debug-logging ones socketService.js attaches once at socket
+    // creation), not just the ones registered here.
     return () => {
-      socket.off('connect');
-      socket.off('disconnect');
+      socket.off('connect',    handleConnect);
+      socket.off('disconnect', handleDisconnect);
     };
   }, [token]);
 

@@ -11,9 +11,9 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     // Restore session on mount
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      handleSession(session);
-    });
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => handleSession(session))
+      .catch(() => handleSession(null));
 
     // Listen for auth state changes (login / logout / token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {

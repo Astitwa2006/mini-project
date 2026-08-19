@@ -23,7 +23,8 @@ export function registerChatHandlers(io, socket) {
     // Broadcast to all players in the room
     io.to(`room:${roomId}`).emit('chat:new_message', chatMessage);
 
-    // Persist to Supabase asynchronously
+    // Persist to Supabase asynchronously — chat still works in real time
+    // over the socket even if this fails, so just log rather than block.
     supabaseAdmin.from('chat_messages').insert({
       room_id:    roomId,
       user_id:    user.id,
@@ -31,6 +32,6 @@ export function registerChatHandlers(io, socket) {
       created_at: chatMessage.createdAt,
     }).then(({ error }) => {
       if (error) logger.warn('Chat persist failed:', error.message);
-    });
+    }).catch((err) => logger.warn('Chat persist failed:', err.message));
   });
 }

@@ -5,10 +5,23 @@ import { env } from '../config/env.js';
 import { logger } from '../utils/logger.js';
 
 const ANSWERS_TTL = 7200;
+const SENT_AT_TTL = 7200;
+
+/**
+ * Records the server-side timestamp at which a question was broadcast to a
+ * room. recordAnswer() uses this as the source of truth for scoring instead
+ * of trusting the client's self-reported time remaining — otherwise anyone
+ * could intercept the `game:answer` socket call and simply claim maximum
+ * points on every answer regardless of how long they actually took.
+ */
+export async function recordQuestionSentAt(roomId, questionIndex) {
+  await cache.set(`room:${roomId}:q:${questionIndex}:sentAt`, Date.now(), SENT_AT_TTL);
+}
 
 /**
  * Records a player's answer for a question.
- * Returns { isCorrect, points, timeRemainingMs }
+ * Returns { isCorrect, points, correctAnswer, explanation } on a fresh
+ * submission, or { alreadyAnswered: true } if this player already answered.
  */
 export async function recordAnswer({ roomId, questionIndex, playerId, selectedOption, timeRemainingMs }) {
   const answersKey = `room:${roomId}:answers:${questionIndex}`;
@@ -26,14 +39,24 @@ export async function recordAnswer({ roomId, questionIndex, playerId, selectedOp
     throw new Error('Question not found');
   }
 
-  const question  = questions[questionIndex];
-  const isCorrect = selectedOption === question.correct;
-  const points    = isCorrect
-    ? calculateScore(timeRemainingMs, env.QUESTION_TIME_LIMIT_SECONDS * 1000)
+  const question    = questions[questionIndex];
+  const isCorrect   = selectedOption === question.correct;
+  const timeLimitMs = env.QUESTION_TIME_LIMIT_SECONDS * 1000;
+
+  // Never trust the client's reported timeRemainingMs on its own — clamp it
+  // to what the server clock actually allows, computed from when this
+  // question was broadcast. A client can only end up scored *lower* than
+  // it claims (e.g. due to its own network latency), never higher.
+  const sentAt = await cache.get(`room:${roomId}:q:${questionIndex}:sentAt`);
+  const serverRemainingMs = sentAt != null ? Math.max(0, timeLimitMs - (Date.now() - sentAt)) : timeRemainingMs;
+  const authoritativeRemainingMs = Math.min(Math.max(0, timeRemainingMs), serverRemainingMs);
+
+  const points = isCorrect
+    ? calculateScore(authoritativeRemainingMs, timeLimitMs)
     : 0;
 
   // Save this player's answer
-  existing[playerId] = { selectedOption, isCorrect, points, timeRemainingMs };
+  existing[playerId] = { selectedOption, isCorrect, points, timeRemainingMs: authoritativeRemainingMs };
   await cache.set(answersKey, existing, ANSWERS_TTL);
 
   // Update player score (and correct-answer tally) in room state

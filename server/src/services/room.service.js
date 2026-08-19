@@ -135,4 +135,5 @@ export async function cleanupRoom(roomId, code) {
     `room:code:${code}`
   );
   await cache.delPattern(`room:${roomId}:answers:*`);
+  await cache.delPattern(`room:${roomId}:q:*`);
 }

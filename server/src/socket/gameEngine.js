@@ -1,5 +1,5 @@
 import { lockQuestionsForRoom, clearRoomQuestions } from '../services/question.service.js';
-import { getLeaderboard, persistFinalScores, allPlayersAnswered } from '../services/score.service.js';
+import { getLeaderboard, persistFinalScores, allPlayersAnswered, recordQuestionSentAt } from '../services/score.service.js';
 import { updateRoomStatus, cleanupRoom } from '../services/room.service.js';
 import { supabaseAdmin } from '../config/supabase.js';
 import { env } from '../config/env.js';
@@ -57,6 +57,11 @@ export async function startGame(io, room) {
       const q = questions[i];
 
       await updateRoomStatus(roomId, PHASE.QUESTION);
+
+      // Record the authoritative broadcast time BEFORE emitting, so no
+      // client can ever compute a "time remaining" larger than what the
+      // server itself will use to score their answer.
+      await recordQuestionSentAt(roomId, i);
 
       // Send question WITHOUT the correct answer
       io.to(socketRoom).emit('game:question', {

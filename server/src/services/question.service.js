@@ -29,47 +29,57 @@ const inFlight = new Map();
 export async function getQuestionPool(topics, difficulty = 'any', desiredCount = env.DEFAULT_QUESTIONS_PER_GAME) {
   const hash     = topicsToHash(topics);
   const cacheKey = `questions:pool:${hash}`;
+  const usable   = (pool) => (difficulty === 'any' ? pool : pool.filter((q) => q.difficulty === difficulty));
 
   const cached = await cache.get(cacheKey);
-  if (cached && cached.length > 0) {
-    logger.info(`Cache hit for question pool [${hash}] — ${cached.length} questions`);
-    return difficulty === 'any' ? cached : cached.filter((q) => q.difficulty === difficulty);
+  if (cached && usable(cached).length >= desiredCount) {
+    logger.info(`Cache hit for question pool [${hash}] — ${cached.length} questions (${usable(cached).length} matching)`);
+    return usable(cached);
   }
 
   if (inFlight.has(hash)) {
     logger.debug(`Question pool [${hash}] generation already in progress — waiting on it`);
     const questions = await inFlight.get(hash);
-    return difficulty === 'any' ? questions : questions.filter((q) => q.difficulty === difficulty);
+    return usable(questions);
   }
 
-  const job = generatePool(topics, hash, desiredCount).finally(() => inFlight.delete(hash));
+  // Either no cache yet, or the cached pool is smaller than this caller
+  // actually needs (e.g. an earlier room asked for 8 questions and this
+  // one wants 20 for the same topics) — generate more and merge instead
+  // of silently handing back a too-small pool.
+  const job = generatePool(topics, hash, desiredCount, cached || []).finally(() => inFlight.delete(hash));
   inFlight.set(hash, job);
 
   const questions = await job;
-  return difficulty === 'any' ? questions : questions.filter((q) => q.difficulty === difficulty);
+  return usable(questions);
 }
 
-async function generatePool(topics, hash, desiredCount) {
-  logger.info(`Cache miss — fetching RSS for topics: ${topics.join(', ')}`);
+async function generatePool(topics, hash, desiredCount, existing = []) {
+  logger.info(`${existing.length ? `Topping up [${hash}] (have ${existing.length}) —` : 'Cache miss —'} fetching RSS for topics: ${topics.join(', ')}`);
 
   const articles = await fetchArticlesByTopics(topics, 6);
   if (articles.length === 0) {
-    logger.warn('No articles fetched — returning empty pool');
-    return [];
+    logger.warn('No articles fetched — returning existing pool as-is');
+    return existing;
   }
 
   // A modest buffer over what's actually needed — covers difficulty
   // filtering and the occasional bad LLM response — instead of always
   // generating up to MAX_QUESTIONS_PER_GAME * 2 regardless of room size.
   const target = Math.min(Math.ceil(desiredCount * 1.5) + 3, env.MAX_QUESTIONS_PER_GAME * 2, articles.length);
-  const questions = await batchGenerateQuestions(articles, target);
+  const freshlyGenerated = await batchGenerateQuestions(articles, target);
 
-  if (questions.length > 0) {
-    await cache.set(`questions:pool:${hash}`, questions, POOL_TTL);
-    logger.info(`Cached ${questions.length} questions for [${hash}] — TTL ${POOL_TTL}s`);
+  // Merge with whatever was already cached, deduping by question text so
+  // a top-up run adds to the pool instead of piling up near-duplicates.
+  const seen   = new Set(existing.map((q) => q.question));
+  const merged = [...existing, ...freshlyGenerated.filter((q) => !seen.has(q.question))];
+
+  if (merged.length > 0) {
+    await cache.set(`questions:pool:${hash}`, merged, POOL_TTL);
+    logger.info(`Cached ${merged.length} questions for [${hash}] — TTL ${POOL_TTL}s`);
   }
 
-  return questions;
+  return merged;
 }
 
 /**

@@ -18,6 +18,13 @@ COPY server/package.json server/package.json
 COPY tests/package.json tests/package.json
 RUN npm ci
 
+# Vite bakes VITE_* env vars into the JS bundle at build time.
+# Render automatically forwards its env vars as Docker build args.
+ARG VITE_SUPABASE_URL
+ARG VITE_SUPABASE_ANON_KEY
+ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL
+ENV VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY
+
 # Now copy source and build the client bundle
 COPY . .
 RUN npm run build --workspace=client

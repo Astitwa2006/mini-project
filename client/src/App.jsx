@@ -21,6 +21,7 @@ export default function App() {
     <Routes>
       <Route path="/"         element={<LandingPage />} />
       <Route path="/login"    element={<LoginPage />} />
+      <Route path="/join"     element={<JoinPage />} />
       <Route path="/join/:code" element={<JoinPage />} />
 
       <Route path="/lobby"   element={<ProtectedRoute><LobbyPage /></ProtectedRoute>} />

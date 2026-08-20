@@ -24,7 +24,8 @@ export default function ResultsPage() {
   }
 
   return (
-    <div className="min-h-screen box-border px-[22px] pt-[66px] pb-[44px] bg-bg text-text flex flex-col gap-[20px] font-sans dark max-w-md mx-auto">
+    <div className="min-h-screen box-border bg-bg text-text flex flex-col font-sans">
+      <div className="max-w-[480px] mx-auto w-full flex-1 flex flex-col px-[22px] pt-[66px] pb-[44px] gap-[20px]">
       
       <div className="flex flex-col gap-1">
         <span className="font-mono font-medium text-[10px] tracking-[0.16em] text-[#EDEAE3]/45 uppercase">
@@ -89,6 +90,7 @@ export default function ResultsPage() {
       >
         Back to lobby
       </button>
+      </div>
     </div>
   );
 }

@@ -23,10 +23,10 @@ export default function AnswerMulti({ options = [], onSelect, selectedOptions, c
         const isWrong = revealed && isSelected && !isCorrect;
         
         let containerClass = "flex items-center gap-3 border rounded-[14px] px-4 py-3.5 transition-all cursor-pointer ";
-        if (isCorrect) containerClass += "border-accent bg-accent/10 text-white";
-        else if (isWrong) containerClass += "border-danger/40 bg-danger/10 text-[#EDEAE3]/70";
-        else if (isSelected) containerClass += "border-accent bg-accent/10 text-white";
-        else containerClass += "border-white/12 bg-white/5 text-[#EDEAE3]";
+        if (isCorrect) containerClass += "border-accent bg-accent/10 text-text";
+        else if (isWrong) containerClass += "border-danger/40 bg-danger/10 text-text-muted";
+        else if (isSelected) containerClass += "border-accent bg-accent/10 text-text";
+        else containerClass += "border-border bg-surface-alt text-text";
         
         return (
           <motion.button
@@ -36,7 +36,7 @@ export default function AnswerMulti({ options = [], onSelect, selectedOptions, c
             whileTap={!disabled ? { scale: 0.98 } : {}}
             className={containerClass + " text-left"}
           >
-            <div className={`w-5 h-5 rounded flex items-center justify-center border-2 ${isSelected || isCorrect ? 'border-accent bg-accent text-[#0B0D10]' : 'border-white/30'}`}>
+            <div className={`w-5 h-5 rounded flex items-center justify-center border-2 ${isSelected || isCorrect ? 'border-accent bg-accent text-[#0B0D10]' : 'border-border-heavy'}`}>
               {(isSelected || isCorrect) && '✓'}
             </div>
             <span className="font-medium flex-1">{text}</span>
@@ -44,7 +44,7 @@ export default function AnswerMulti({ options = [], onSelect, selectedOptions, c
         );
       })}
       {!disabled && (
-        <button onClick={() => onSelect(selected)} disabled={selected.length === 0} className="h-[52px] rounded-xl bg-accent text-[#0B0D10] font-bold mt-2 disabled:opacity-50">
+        <button onClick={() => onSelect(selected)} disabled={selected.length === 0} className="h-[52px] rounded-xl bg-surface-inverted text-text-inverted font-bold mt-2 disabled:opacity-50">
           Submit ({selected.length})
         </button>
       )}

@@ -20,16 +20,16 @@ export default function AnswerTypeIn({ onSelect, selectedOption, correctAnswer, 
           onChange={(e) => setVal(e.target.value)}
           disabled={disabled}
           placeholder="Type your answer..."
-          className={`w-full h-[64px] rounded-2xl bg-white/5 border-2 px-6 font-semibold text-lg transition-all focus:outline-none ${revealed ? (isCorrect ? 'border-accent text-accent' : 'border-danger text-danger') : (selectedOption ? 'border-accent text-accent' : 'border-white/15 focus:border-white/30 text-[#EDEAE3]')}`}
+          className={`w-full h-[64px] rounded-2xl bg-surface-alt border-2 px-6 font-semibold text-lg transition-all focus:outline-none ${revealed ? (isCorrect ? 'border-accent text-accent' : 'border-danger text-danger') : (selectedOption ? 'border-accent text-accent' : 'border-border-heavy focus:border-surface-inverted dark:focus:border-accent text-text placeholder:text-text-muted')}`}
         />
         {revealed && (
-          <div className="mt-2 text-sm text-[#EDEAE3]/60">
+          <div className="mt-2 text-sm text-text-muted">
             Correct answer: <span className="text-accent font-bold">{correctAnswer}</span>
           </div>
         )}
       </motion.div>
       {!disabled && (
-        <button type="submit" disabled={!val.trim()} className="h-[52px] rounded-xl bg-accent text-[#0B0D10] font-bold mt-2 disabled:opacity-50">
+        <button type="submit" disabled={!val.trim()} className="h-[52px] rounded-xl bg-surface-inverted text-text-inverted font-bold mt-2 disabled:opacity-50">
           Submit
         </button>
       )}

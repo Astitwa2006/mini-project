@@ -16,7 +16,7 @@ export default function CountdownTimer({ timeLimitMs, running, onExpire }) {
       {/* SVG ring */}
       <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 100 100">
         {/* Track */}
-        <circle cx="50" cy="50" r={radius} fill="none" stroke="rgba(255,255,255,0.09)" strokeWidth="12" />
+        <circle cx="50" cy="50" r={radius} fill="none" stroke="currentColor" className="text-border-heavy" strokeWidth="12" />
         {/* Progress */}
         <motion.circle
           cx="50" cy="50" r={radius}
@@ -30,7 +30,7 @@ export default function CountdownTimer({ timeLimitMs, running, onExpire }) {
       </svg>
       
       {/* Center Background to hide SVG center if needed (though stroke is on the edge) */}
-      <div className="absolute inset-0 m-auto w-[60px] h-[60px] rounded-full bg-[#0B0D10]" />
+      <div className="absolute inset-0 m-auto w-[60px] h-[60px] rounded-full bg-surface-base" />
 
       {/* Time text */}
       <AnimatePresence mode="wait">

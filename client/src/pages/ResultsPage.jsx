@@ -28,11 +28,11 @@ export default function ResultsPage() {
       <div className="max-w-[480px] mx-auto w-full flex-1 flex flex-col px-[22px] pt-[66px] pb-[44px] gap-[20px]">
       
       <div className="flex flex-col gap-1">
-        <span className="font-mono font-medium text-[10px] tracking-[0.16em] text-[#EDEAE3]/45 uppercase">
+        <span className="font-mono font-medium text-[10px] tracking-[0.16em] text-text-muted uppercase">
           ROOM {room?.code} · {room?.questionCount || 10} QUESTIONS
         </span>
         <h2 className="m-0 font-bold text-[34px] leading-[1.05] tracking-[-0.03em]">
-          You came <span className="text-accent">{ordinal(myResult?.rank || 1)}</span>
+          You came <span className="text-surface-inverted dark:text-accent">{ordinal(myResult?.rank || 1)}</span>
         </h2>
       </div>
 
@@ -41,12 +41,12 @@ export default function ResultsPage() {
         {/* 2nd Place */}
         {second ? (
           <div className="flex-1 flex flex-col items-center gap-[8px]">
-            <div className={`w-[38px] h-[38px] rounded-[11px] ${AVATAR_COLORS[1]} text-[#0B0D10] flex items-center justify-center font-bold text-[14px]`}>
+            <div className={`w-[38px] h-[38px] rounded-[11px] ${AVATAR_COLORS[1]} text-[#0B0D10] border border-border-heavy flex items-center justify-center font-bold text-[14px]`}>
               {second.username?.substring(0,2).toUpperCase() || 'P2'}
             </div>
-            <div className="w-full h-[118px] rounded-t-[12px] bg-gradient-to-b from-[#C8FF4D]/40 to-[#C8FF4D]/[0.08] border border-[#C8FF4D]/35 border-b-0 flex flex-col items-center justify-start pt-[12px] gap-[2px]">
-              <span className="font-mono font-bold text-[20px]">2</span>
-              <span className="font-mono font-medium text-[12px] text-[#EDEAE3]/70">{second.score.toLocaleString()}</span>
+            <div className="w-full h-[118px] rounded-t-[12px] bg-gradient-to-b from-accent/40 to-accent/[0.08] border border-accent/35 border-b-0 flex flex-col items-center justify-start pt-[12px] gap-[2px]">
+              <span className="font-mono font-bold text-[20px] text-text">2</span>
+              <span className="font-mono font-medium text-[12px] text-text-muted">{second.score.toLocaleString()}</span>
             </div>
           </div>
         ) : <div className="flex-1" />}
@@ -55,12 +55,12 @@ export default function ResultsPage() {
         {first && (
           <div className="flex-1 flex flex-col items-center gap-[8px]">
             <div className="w-[18px] h-[18px] text-[18px] mb-[-4px]">👑</div>
-            <div className={`w-[38px] h-[38px] rounded-[11px] ${AVATAR_COLORS[0]} text-[#0B0D10] flex items-center justify-center font-bold text-[14px]`}>
+            <div className={`w-[38px] h-[38px] rounded-[11px] ${AVATAR_COLORS[0]} text-[#0B0D10] border border-border-heavy flex items-center justify-center font-bold text-[14px]`}>
               {first.username?.substring(0,2).toUpperCase() || 'P1'}
             </div>
-            <div className="w-full h-[150px] rounded-t-[12px] bg-gradient-to-b from-[#C8FF4D]/70 to-[#C8FF4D]/[0.15] border border-[#C8FF4D]/60 border-b-0 flex flex-col items-center justify-start pt-[12px] gap-[2px]">
-              <span className="font-mono font-bold text-[20px] text-[#0B0D10]">1</span>
-              <span className="font-mono font-medium text-[12px] text-[#0B0D10]/70">{first.score.toLocaleString()}</span>
+            <div className="w-full h-[150px] rounded-t-[12px] bg-gradient-to-b from-accent/70 to-accent/[0.15] border border-accent/60 border-b-0 flex flex-col items-center justify-start pt-[12px] gap-[2px]">
+              <span className="font-mono font-bold text-[20px] text-text">1</span>
+              <span className="font-mono font-medium text-[12px] text-text-muted">{first.score.toLocaleString()}</span>
             </div>
           </div>
         )}
@@ -68,12 +68,12 @@ export default function ResultsPage() {
         {/* 3rd Place */}
         {third ? (
           <div className="flex-1 flex flex-col items-center gap-[8px]">
-            <div className={`w-[38px] h-[38px] rounded-[11px] ${AVATAR_COLORS[2]} text-[#0B0D10] flex items-center justify-center font-bold text-[14px]`}>
+            <div className={`w-[38px] h-[38px] rounded-[11px] ${AVATAR_COLORS[2]} text-[#0B0D10] border border-border-heavy flex items-center justify-center font-bold text-[14px]`}>
               {third.username?.substring(0,2).toUpperCase() || 'P3'}
             </div>
-            <div className="w-full h-[90px] rounded-t-[12px] bg-gradient-to-b from-[#C8FF4D]/20 to-[#C8FF4D]/[0.05] border border-[#C8FF4D]/20 border-b-0 flex flex-col items-center justify-start pt-[12px] gap-[2px]">
-              <span className="font-mono font-bold text-[20px]">3</span>
-              <span className="font-mono font-medium text-[12px] text-[#EDEAE3]/70">{third.score.toLocaleString()}</span>
+            <div className="w-full h-[90px] rounded-t-[12px] bg-gradient-to-b from-accent/20 to-accent/[0.05] border border-accent/20 border-b-0 flex flex-col items-center justify-start pt-[12px] gap-[2px]">
+              <span className="font-mono font-bold text-[20px] text-text">3</span>
+              <span className="font-mono font-medium text-[12px] text-text-muted">{third.score.toLocaleString()}</span>
             </div>
           </div>
         ) : <div className="flex-1" />}
@@ -81,12 +81,12 @@ export default function ResultsPage() {
 
       <div className="flex-1 min-h-[20px]"></div>
 
-      <button className="h-[54px] rounded-[14px] bg-white/5 border border-white/10 flex items-center justify-center font-semibold text-[16px] text-[#EDEAE3]/85 hover:bg-white/10 transition-all">
+      <button className="h-[54px] rounded-[14px] bg-surface-alt border border-border flex items-center justify-center font-semibold text-[16px] text-text hover:bg-surface-base transition-all">
         Review answers
       </button>
       <button 
         onClick={handlePlayAgain}
-        className="h-[54px] rounded-[14px] bg-accent flex items-center justify-center font-semibold text-[16px] text-[#0B0D10] hover:brightness-110 transition-all"
+        className="h-[54px] rounded-[14px] bg-surface-inverted flex items-center justify-center font-semibold text-[16px] text-text-inverted hover:opacity-90 transition-all"
       >
         Back to lobby
       </button>

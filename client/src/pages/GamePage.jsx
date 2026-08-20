@@ -64,8 +64,8 @@ export default function GamePage() {
           transition={{ type: 'spring', stiffness: 200 }}
         >
           <div className="text-[80px]">🚀</div>
-          <h1 className="font-bold text-4xl text-white">Get Ready!</h1>
-          <p className="font-medium text-[#EDEAE3]/60">{totalQuestions} questions · {questionTime}s each</p>
+          <h1 className="font-bold text-4xl text-text">Get Ready!</h1>
+          <p className="font-medium text-text-muted">{totalQuestions} questions · {questionTime}s each</p>
         </motion.div>
       )}
 
@@ -74,12 +74,12 @@ export default function GamePage() {
         <>
           {/* Top Bar (Progress) */}
           <div className="flex items-center justify-between gap-3">
-            <span className="font-mono font-medium text-[11px] tracking-[0.1em] text-[#EDEAE3]/45 whitespace-nowrap">
+            <span className="font-mono font-medium text-[11px] tracking-[0.1em] text-text-muted whitespace-nowrap">
               Q{currentQuestion.index + 1} / {totalQuestions}
             </span>
-            <div className="flex-1 h-1 rounded-full bg-white/10 overflow-hidden">
+            <div className="flex-1 h-1 rounded-full bg-surface-alt border border-border overflow-hidden">
               <motion.div
-                className="h-full bg-[#EDEAE3]/55 rounded-full"
+                className="h-full bg-surface-inverted/50 rounded-full"
                 initial={{ width: 0 }}
                 animate={{ width: `${((currentQuestion.index) / totalQuestions) * 100}%` }}
               />
@@ -121,7 +121,7 @@ export default function GamePage() {
                 <span className="font-mono font-medium text-[10px] tracking-[0.14em] text-danger uppercase">
                   Sourced {currentQuestion.topic}
                 </span>
-                <span className="font-normal text-[12.5px] leading-[1.4] text-[#EDEAE3]/55 max-w-[200px]">
+                <span className="font-normal text-[12.5px] leading-[1.4] text-text-muted max-w-[200px]">
                   Generated from real-time topic feeds
                 </span>
               </div>
@@ -134,7 +134,7 @@ export default function GamePage() {
               {currentQuestion.question}
             </h2>
             {/* Type badge */}
-            <span className="shrink-0 font-mono font-bold text-[10px] tracking-[0.1em] text-white/40 border border-white/20 rounded-md px-1.5 py-0.5 uppercase">
+            <span className="shrink-0 font-mono font-bold text-[10px] tracking-[0.1em] text-text-muted border border-border-heavy rounded-md px-1.5 py-0.5 uppercase">
               {currentQuestion.type || 'single'}
             </span>
           </div>
@@ -144,14 +144,14 @@ export default function GamePage() {
              <div className="flex gap-2 mt-2 mb-2">
                 <button 
                   onClick={() => setWager(!wager)}
-                  className={`flex-1 h-12 rounded-xl border flex items-center justify-center gap-2 font-medium text-[13px] transition-colors ${wager ? 'bg-[#FF7A66] text-[#14161A] border-[#FF7A66]' : 'bg-transparent text-[#EDEAE3] border-white/20 hover:bg-white/5'}`}
+                  className={`flex-1 h-12 rounded-xl border flex items-center justify-center gap-2 font-medium text-[13px] transition-colors ${wager ? 'bg-[#FF7A66] text-[#14161A] border-[#FF7A66]' : 'bg-transparent text-text border-border-heavy hover:bg-surface-alt'}`}
                 >
                   <span className="font-mono text-[10px] opacity-60">WAGER</span> 2×
                 </button>
                 {/* Simplified Steal: target a random opponent (or just mark intent if we don't have a specific dropdown yet) */}
                 <button 
                   onClick={() => setStealTarget(stealTarget ? null : (room.players.find(p => p.id !== user.id)?.id || 'random'))}
-                  className={`flex-1 h-12 rounded-xl border flex items-center justify-center gap-2 font-medium text-[13px] transition-colors ${stealTarget ? 'bg-[#C8FF4D] text-[#14161A] border-[#C8FF4D]' : 'bg-transparent text-[#EDEAE3] border-white/20 hover:bg-white/5'}`}
+                  className={`flex-1 h-12 rounded-xl border flex items-center justify-center gap-2 font-medium text-[13px] transition-colors ${stealTarget ? 'bg-[#C8FF4D] text-[#14161A] border-[#C8FF4D]' : 'bg-transparent text-text border-border-heavy hover:bg-surface-alt'}`}
                 >
                   <span className="font-mono text-[10px] opacity-60">STEAL</span>
                 </button>
@@ -216,8 +216,8 @@ export default function GamePage() {
 
           {/* Bottom Bar: Answers in (if not reveal) */}
           {phase === GAME_PHASE.QUESTION && (
-            <div className="border-t border-white/10 pt-3.5 flex items-center gap-2.5">
-              <span className="font-normal text-[12.5px] text-[#EDEAE3]/50">
+            <div className="border-t border-border pt-3.5 flex items-center gap-2.5">
+              <span className="font-normal text-[12.5px] text-text-muted">
                 Waiting for players to answer...
               </span>
             </div>
@@ -228,13 +228,13 @@ export default function GamePage() {
             <motion.div 
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="border border-white/10 rounded-[16px] overflow-hidden bg-white/5 mt-2"
+              className="border border-border-heavy rounded-[16px] overflow-hidden bg-surface-alt mt-2"
             >
               <div className="p-4 flex flex-col gap-2">
                 <span className="font-mono font-medium text-[10px] tracking-[0.14em] text-danger">
                   WHY THIS ANSWER
                 </span>
-                <span className="font-normal text-[14px] leading-[1.5] text-[#EDEAE3]/80 text-balance">
+                <span className="font-normal text-[14px] leading-[1.5] text-text text-balance">
                   {reveal.explanation}
                 </span>
               </div>

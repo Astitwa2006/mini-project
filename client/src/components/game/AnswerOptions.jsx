@@ -22,13 +22,13 @@ export default function AnswerOptions({
           // Reveal Correct (Mockup 1e)
           containerClass += "border-accent bg-accent/10 ";
           badgeClass += "bg-accent text-[#0B0D10]";
-          textClass += "text-white font-semibold flex-1";
+          textClass += "text-text font-semibold flex-1";
           rightText = <span className="font-mono font-medium text-[11px] text-accent ml-auto">✓</span>;
         } else if (isWrong) {
           // Reveal Incorrect (Mockup 1e)
           containerClass += "border-danger/40 bg-danger/10 opacity-85 ";
           badgeClass += "bg-danger text-[#0B0D10]";
-          textClass += "text-[#EDEAE3]/70 flex-1";
+          textClass += "text-text-muted flex-1";
           rightText = <span className="font-mono font-medium text-[11px] text-danger ml-auto">✗</span>;
         } else if (isSelected && !revealed) {
           // Locked in (Mockup 1d)
@@ -38,13 +38,13 @@ export default function AnswerOptions({
           rightText = <span className="font-mono font-medium text-[10px] text-accent ml-auto">LOCKED</span>;
         } else {
           // Default state (Mockup 1d)
-          containerClass += "border-white/12 bg-white/5 ";
-          badgeClass += "bg-white/10 text-[#EDEAE3]/60";
-          textClass += "flex-1 text-[#EDEAE3]";
+          containerClass += "border-border bg-surface-alt shadow-sm ";
+          badgeClass += "bg-surface-inverted/10 dark:bg-white/10 text-text-muted";
+          textClass += "flex-1 text-text";
           if (disabled && !revealed) {
             containerClass += "opacity-50 cursor-not-allowed ";
           } else {
-            containerClass += "hover:bg-white/10 ";
+            containerClass += "hover:bg-surface-base ";
           }
         }
 

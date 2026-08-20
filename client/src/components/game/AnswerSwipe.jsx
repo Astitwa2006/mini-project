@@ -19,7 +19,7 @@ export default function AnswerSwipe({ onSelect, selectedOption, correctAnswer, r
         } else if (isSelected) {
           containerClass += "border-accent bg-accent/10 text-accent";
         } else {
-          containerClass += "border-white/10 bg-white/5 text-[#EDEAE3] hover:bg-white/10";
+          containerClass += "border-border-heavy bg-surface-alt text-text hover:bg-surface-base";
           if (disabled && !revealed) containerClass += " opacity-50";
         }
 

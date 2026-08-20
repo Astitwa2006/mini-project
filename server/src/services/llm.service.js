@@ -1,35 +1,7 @@
+import crypto from 'crypto';
 import { getGeminiModel } from '../config/llm.js';
 import { logger } from '../utils/logger.js';
 import { shuffle } from '../utils/helpers.js';
-
-const SYSTEM_PROMPT = `You are a quiz master generating tech trivia questions from real news articles.
-Your output must always be a valid JSON object matching the schema exactly.
-Do not include any markdown, explanation, or extra text outside the JSON.`;
-
-const USER_PROMPT_TEMPLATE = (article) => `
-Convert this tech news article into a multiple-choice quiz question.
-
-Article title: "${article.title}"
-Summary: "${article.summary}"
-Topic: "${article.topic}"
-
-Return ONLY a JSON object with this exact schema:
-{
-  "question": "A clear, self-contained question about the article content",
-  "options": ["A. option text", "B. option text", "C. option text", "D. option text"],
-  "correct": "A",
-  "explanation": "1-2 sentence explanation of why the answer is correct",
-  "difficulty": "easy" | "medium" | "hard",
-  "topic": "${article.topic}"
-}
-
-Rules:
-- The question must be answerable without reading the article
-- All 4 options must be plausible (no obviously wrong answers)
-- Exactly one option is correct
-- "correct" must be the letter (A, B, C, or D) of the correct option
-- difficulty: easy = general knowledge, medium = requires some tech knowledge, hard = specialist knowledge
-`;
 
 /**
  * Validates a raw {question, options, correct, explanation, difficulty}
@@ -44,38 +16,55 @@ function finalizeQuestion(parsed, article) {
     logger.warn('LLM returned incomplete question schema', { title: article?.title });
     return null;
   }
-
-  if (parsed.options.length !== 4) {
-    logger.warn('LLM returned wrong number of options', { title: article?.title });
+  if (!parsed?.question || !parsed?.type) {
+    logger.warn('LLM returned invalid question format', { parsed });
     return null;
   }
 
-  const validLetters = ['A', 'B', 'C', 'D'];
-  if (!validLetters.includes(parsed.correct)) {
-    logger.warn('LLM returned invalid correct letter', { correct: parsed.correct });
-    return null;
+  let processedOptions = parsed.options || [];
+  let processedCorrect = parsed.correct;
+
+  // Normalize and shuffle options for types that need it
+  if (parsed.type === 'single' || parsed.type === 'multi') {
+    const rawOptions = (parsed.options || []).map(o => o.replace(/^[A-F]\.\s*/, ''));
+    
+    const correctTexts = [];
+    if (parsed.type === 'single') {
+      const cIndex = (parsed.options || []).findIndex(o => o.startsWith(parsed.correct + '.') || o === parsed.correct);
+      correctTexts.push(rawOptions[cIndex >= 0 ? cIndex : 0]);
+    } else {
+      for (const c of (parsed.correct || [])) {
+         const cIndex = (parsed.options || []).findIndex(o => o.startsWith(c + '.') || o === c);
+         if (cIndex >= 0) correctTexts.push(rawOptions[cIndex]);
+      }
+    }
+
+    const shuffled = shuffle(rawOptions);
+    processedOptions = shuffled.map((opt, i) => `${String.fromCharCode(65 + i)}. ${opt}`); 
+    
+    if (parsed.type === 'single') {
+      const newIdx = shuffled.indexOf(correctTexts[0]);
+      processedCorrect = String.fromCharCode(65 + (newIdx >= 0 ? newIdx : 0));
+    } else {
+      processedCorrect = correctTexts.map(t => String.fromCharCode(65 + shuffled.indexOf(t)));
+    }
+  } else if (parsed.type === 'rank') {
+     processedOptions = shuffle((parsed.options || []).map(o => o.replace(/^[A-D]\.\s*/, '')));
+     processedCorrect = (parsed.correct || []).map(o => o.replace(/^[A-D]\.\s*/, ''));
+  } else if (parsed.type === 'swipe') {
+     processedOptions = ['True', 'False']; 
+     processedCorrect = parsed.correct === 'True' || parsed.correct === true || parsed.correct === 'true' ? 'True' : 'False';
+  } else if (parsed.type === 'type-in') {
+     processedOptions = [];
+     processedCorrect = String(parsed.correct || '').toLowerCase().trim();
   }
-
-  // Shuffle options while keeping track of the correct answer text
-  const correctOptionText = parsed.options.find((o) => o.startsWith(`${parsed.correct}.`));
-  const shuffledOptions   = shuffle(parsed.options);
-
-  // Re-assign letters after shuffling
-  const lettered = shuffledOptions.map((opt, i) => {
-    const letter = validLetters[i];
-    const text   = opt.replace(/^[A-D]\.\s*/, ''); // strip old letter
-    return `${letter}. ${text}`;
-  });
-
-  const newCorrect = lettered.find((o) =>
-    o.replace(/^[A-D]\.\s*/, '') === correctOptionText?.replace(/^[A-D]\.\s*/, '')
-  );
 
   return {
     id:          crypto.randomUUID(),
     question:    parsed.question,
-    options:     lettered,
-    correct:     newCorrect?.charAt(0) || 'A',
+    type:        parsed.type,
+    options:     processedOptions,
+    correct:     processedCorrect,
     explanation: parsed.explanation,
     difficulty:  parsed.difficulty || 'medium',
     topic:       parsed.topic || article?.topic,
@@ -102,12 +91,14 @@ function isTransientError(message = '') {
 export async function generateQuestionFromArticle(article, retriesLeft = 1) {
   try {
     const model = getGeminiModel();
-    const prompt = `${SYSTEM_PROMPT}\n\n${USER_PROMPT_TEMPLATE(article)}`;
+    // Re-use BATCH logic for single article to keep prompts unified
+    const prompt = `${BATCH_SYSTEM_PROMPT}\n\n${BATCH_PROMPT_TEMPLATE([article])}`;
 
     const result = await model.generateContent(prompt);
     const parsed = JSON.parse(result.response.text());
 
-    return finalizeQuestion(parsed, article);
+    const item = Array.isArray(parsed?.questions) ? parsed.questions[0] : parsed;
+    return finalizeQuestion(item, article);
   } catch (err) {
     if (isTransientError(err.message) && retriesLeft > 0) {
       await new Promise((r) => setTimeout(r, 800));
@@ -128,7 +119,8 @@ const BATCH_PROMPT_TEMPLATE = (articles) => {
     .join('\n\n');
 
   return `
-Convert EACH of these ${articles.length} tech news articles into one multiple-choice quiz question.
+Convert EACH of these ${articles.length} tech news articles into ONE quiz question.
+Randomly vary the question format between 'single', 'multi', 'rank', 'swipe', and 'type-in'.
 
 ${articleList}
 
@@ -137,9 +129,10 @@ Return ONLY a JSON object with this exact schema:
   "questions": [
     {
       "index": 1,
+      "type": "single" | "multi" | "rank" | "swipe" | "type-in",
       "question": "A clear, self-contained question about the article content",
-      "options": ["A. option text", "B. option text", "C. option text", "D. option text"],
-      "correct": "A",
+      "options": ["Array of options (if type is single, multi, or rank. Empty for swipe and type-in)"],
+      "correct": "The correct answer. (For single: a letter A-D. For multi: array of letters. For rank: array of the exact option strings in correct order. For swipe: 'True' or 'False'. For type-in: a short string answer).",
       "explanation": "1-2 sentence explanation of why the answer is correct",
       "difficulty": "easy" | "medium" | "hard",
       "topic": "the article's topic slug"
@@ -151,8 +144,7 @@ Rules:
 - Return exactly ${articles.length} question objects, one per article, in the same order
 - "index" must match the article's number above (1-based)
 - Each question must be answerable without reading the article
-- All 4 options must be plausible; exactly one is correct
-- "correct" is the letter (A-D) of the correct option
+- Try to mix up the types so that not all questions are the same format.
 `;
 };
 

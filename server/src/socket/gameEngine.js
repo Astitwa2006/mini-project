@@ -1,5 +1,5 @@
 import { lockQuestionsForRoom, clearRoomQuestions } from '../services/question.service.js';
-import { getLeaderboard, persistFinalScores, allPlayersAnswered, recordQuestionSentAt } from '../services/score.service.js';
+import { getLeaderboard, persistFinalScores, allPlayersAnswered, recordQuestionSentAt, resolveRoundModifiers } from '../services/score.service.js';
 import { updateRoomStatus, cleanupRoom } from '../services/room.service.js';
 import { supabaseAdmin } from '../config/supabase.js';
 import { env } from '../config/env.js';
@@ -78,6 +78,7 @@ export async function startGame(io, room) {
       await waitForAnswers(io, socketRoom, roomId, i, QUESTION_TIME_MS);
 
       // ── Reveal phase ─────────────────────────────────────────────
+      await resolveRoundModifiers(roomId, i);
       const leaderboard = await getLeaderboard(roomId);
       io.to(socketRoom).emit('game:reveal', {
         index:       i,

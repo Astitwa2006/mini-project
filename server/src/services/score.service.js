@@ -1,6 +1,6 @@
 import { supabaseAdmin } from '../config/supabase.js';
 import { cache } from './cache.service.js';
-import { calculateScore } from '../utils/helpers.js';
+import { calculateScore, calculatePartialCredit } from '../utils/helpers.js';
 import { env } from '../config/env.js';
 import { logger } from '../utils/logger.js';
 
@@ -23,7 +23,7 @@ export async function recordQuestionSentAt(roomId, questionIndex) {
  * Returns { isCorrect, points, correctAnswer, explanation } on a fresh
  * submission, or { alreadyAnswered: true } if this player already answered.
  */
-export async function recordAnswer({ roomId, questionIndex, playerId, selectedOption, timeRemainingMs }) {
+export async function recordAnswer({ roomId, questionIndex, playerId, selectedOption, timeRemainingMs, wager, stealTarget }) {
   const answersKey = `room:${roomId}:answers:${questionIndex}`;
   const stateKey   = `room:${roomId}:state`;
 
@@ -40,7 +40,8 @@ export async function recordAnswer({ roomId, questionIndex, playerId, selectedOp
   }
 
   const question    = questions[questionIndex];
-  const isCorrect   = selectedOption === question.correct;
+  const credit      = calculatePartialCredit(selectedOption, question.correct, question.type || 'single');
+  const isCorrect   = credit === 1.0;
   const timeLimitMs = env.QUESTION_TIME_LIMIT_SECONDS * 1000;
 
   // Never trust the client's reported timeRemainingMs on its own — clamp it
@@ -51,16 +52,18 @@ export async function recordAnswer({ roomId, questionIndex, playerId, selectedOp
   const serverRemainingMs = sentAt != null ? Math.max(0, timeLimitMs - (Date.now() - sentAt)) : timeRemainingMs;
   const authoritativeRemainingMs = Math.min(Math.max(0, timeRemainingMs), serverRemainingMs);
 
-  const points = isCorrect
-    ? calculateScore(authoritativeRemainingMs, timeLimitMs)
-    : 0;
+  let basePoints = credit > 0 ? calculateScore(authoritativeRemainingMs, timeLimitMs) * credit : 0;
+  let points = wager ? basePoints * 2 : basePoints;
 
   // Save this player's answer
-  existing[playerId] = { selectedOption, isCorrect, points, timeRemainingMs: authoritativeRemainingMs };
+  existing[playerId] = { 
+    selectedOption, isCorrect, points, timeRemainingMs: authoritativeRemainingMs, 
+    wager, stealTarget, credit
+  };
   await cache.set(answersKey, existing, ANSWERS_TTL);
 
   // Update player score (and correct-answer tally) in room state
-  if (isCorrect) {
+  if (points > 0) {
     const state = await cache.get(stateKey);
     if (state) {
       state.scores[playerId] = (state.scores[playerId] || 0) + points;
@@ -71,7 +74,35 @@ export async function recordAnswer({ roomId, questionIndex, playerId, selectedOp
   }
 
   logger.debug(`Answer recorded: player=${playerId} q=${questionIndex} correct=${isCorrect} pts=${points}`);
-  return { isCorrect, points, correctAnswer: question.correct, explanation: question.explanation };
+  return { isCorrect, points, correctAnswer: question.correct, explanation: question.explanation, credit };
+}
+
+/**
+ * Resolves steals for the current question after time is up.
+ */
+export async function resolveRoundModifiers(roomId, questionIndex) {
+  const answersKey = `room:${roomId}:answers:${questionIndex}`;
+  const stateKey   = `room:${roomId}:state`;
+  
+  const [answers, state] = await Promise.all([
+    cache.get(answersKey),
+    cache.get(stateKey)
+  ]);
+  if (!answers || !state) return;
+  
+  // Process steals
+  for (const [playerId, ans] of Object.entries(answers)) {
+    if (ans.stealTarget && answers[ans.stealTarget]) {
+       const targetAns = answers[ans.stealTarget];
+       // If target got it wrong (credit 0), steal points
+       if (targetAns.credit === 0) {
+          state.scores[playerId] = (state.scores[playerId] || 0) + 200;
+          state.scores[ans.stealTarget] = Math.max(0, (state.scores[ans.stealTarget] || 0) - 200);
+          logger.debug(`Steal successful: ${playerId} stole from ${ans.stealTarget}`);
+       }
+    }
+  }
+  await cache.set(stateKey, state, ANSWERS_TTL);
 }
 
 /**

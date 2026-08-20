@@ -28,7 +28,7 @@ export function registerGameHandlers(io, socket) {
   });
 
   // ── Submit Answer ────────────────────────────────────────────────
-  socket.on('game:answer', async ({ questionIndex, selectedOption, timeRemainingMs }) => {
+  socket.on('game:answer', async ({ questionIndex, selectedOption, timeRemainingMs, wager, stealTarget }) => {
     const { roomId } = socket.data;
     if (!roomId) return;
 
@@ -39,6 +39,8 @@ export function registerGameHandlers(io, socket) {
         playerId:       user.id,
         selectedOption,
         timeRemainingMs: Math.max(0, timeRemainingMs),
+        wager,
+        stealTarget
       });
 
       if (result.alreadyAnswered) return;
@@ -50,6 +52,7 @@ export function registerGameHandlers(io, socket) {
         points:      result.points,
         correctAnswer: result.correctAnswer,
         explanation: result.explanation,
+        credit:      result.credit,
       });
     } catch (err) {
       socket.emit('error', { event: 'game:answer', message: err.message });

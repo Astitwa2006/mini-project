@@ -6,6 +6,10 @@ import { useGameSocket } from '../hooks/useGameSocket.js';
 import { GAME_PHASE } from '../utils/constants.js';
 import CountdownTimer from '../components/game/CountdownTimer.jsx';
 import AnswerOptions from '../components/game/AnswerOptions.jsx';
+import AnswerMulti from '../components/game/AnswerMulti.jsx';
+import AnswerRank from '../components/game/AnswerRank.jsx';
+import AnswerSwipe from '../components/game/AnswerSwipe.jsx';
+import AnswerTypeIn from '../components/game/AnswerTypeIn.jsx';
 import { useNavigate } from 'react-router-dom';
 
 export default function GamePage() {
@@ -19,18 +23,22 @@ export default function GamePage() {
   const { submitAnswer } = useGameSocket();
   const [timerRunning, setTimerRunning] = useState(false);
   const [startTime, setStartTime] = useState(null);
+  
+  // Modifiers
+  const [wager, setWager] = useState(false);
+  const [stealTarget, setStealTarget] = useState(null);
 
   const handleTimerStart = useCallback(() => {
     setTimerRunning(true);
     setStartTime(Date.now());
   }, []);
 
-  const handleAnswer = useCallback((letter) => {
+  const handleAnswer = useCallback((answerValue) => {
     if (myAnswer || !currentQuestion) return;
     const timeRemainingMs = Math.max(0, questionTime * 1000 - (Date.now() - startTime));
-    submitAnswer(currentQuestion.index, letter, timeRemainingMs);
+    submitAnswer(currentQuestion.index, answerValue, timeRemainingMs, wager, stealTarget);
     setTimerRunning(false);
-  }, [myAnswer, currentQuestion, questionTime, startTime, submitAnswer]);
+  }, [myAnswer, currentQuestion, questionTime, startTime, submitAnswer, wager, stealTarget]);
 
   const handleTimerExpire = useCallback(() => {
     setTimerRunning(false);
@@ -120,20 +128,87 @@ export default function GamePage() {
           )}
 
           {/* Question Text */}
-          <h2 className="m-0 mt-1.5 font-semibold text-[27px] leading-[1.2] tracking-[-0.02em] text-balance">
-            {currentQuestion.question}
-          </h2>
+          <div className="flex items-start justify-between gap-3 mt-1.5">
+            <h2 className="m-0 font-semibold text-[27px] leading-[1.2] tracking-[-0.02em] text-balance">
+              {currentQuestion.question}
+            </h2>
+            {/* Type badge */}
+            <span className="shrink-0 font-mono font-bold text-[10px] tracking-[0.1em] text-white/40 border border-white/20 rounded-md px-1.5 py-0.5 uppercase">
+              {currentQuestion.type || 'single'}
+            </span>
+          </div>
+          
+          {/* Modifiers (Wager & Steal) */}
+          {phase === GAME_PHASE.QUESTION && !myAnswer && (
+             <div className="flex gap-2 mt-2 mb-2">
+                <button 
+                  onClick={() => setWager(!wager)}
+                  className={`flex-1 h-12 rounded-xl border flex items-center justify-center gap-2 font-medium text-[13px] transition-colors ${wager ? 'bg-[#FF7A66] text-[#14161A] border-[#FF7A66]' : 'bg-transparent text-[#EDEAE3] border-white/20 hover:bg-white/5'}`}
+                >
+                  <span className="font-mono text-[10px] opacity-60">WAGER</span> 2×
+                </button>
+                {/* Simplified Steal: target a random opponent (or just mark intent if we don't have a specific dropdown yet) */}
+                <button 
+                  onClick={() => setStealTarget(stealTarget ? null : (room.players.find(p => p.id !== user.id)?.id || 'random'))}
+                  className={`flex-1 h-12 rounded-xl border flex items-center justify-center gap-2 font-medium text-[13px] transition-colors ${stealTarget ? 'bg-[#C8FF4D] text-[#14161A] border-[#C8FF4D]' : 'bg-transparent text-[#EDEAE3] border-white/20 hover:bg-white/5'}`}
+                >
+                  <span className="font-mono text-[10px] opacity-60">STEAL</span>
+                </button>
+             </div>
+          )}
 
           {/* Options */}
           <motion.div onAnimationComplete={handleTimerStart}>
-            <AnswerOptions
-              options={currentQuestion.options}
-              onSelect={handleAnswer}
-              selectedOption={myAnswer?.selectedOption}
-              correctAnswer={reveal?.correct}
-              revealed={phase === GAME_PHASE.REVEAL}
-              disabled={!!myAnswer || phase === GAME_PHASE.REVEAL}
-            />
+            {(!currentQuestion.type || currentQuestion.type === 'single') && (
+              <AnswerOptions
+                options={currentQuestion.options}
+                onSelect={handleAnswer}
+                selectedOption={myAnswer?.selectedOption}
+                correctAnswer={reveal?.correct}
+                revealed={phase === GAME_PHASE.REVEAL}
+                disabled={!!myAnswer || phase === GAME_PHASE.REVEAL}
+              />
+            )}
+            {/* We will implement these components next */}
+            {currentQuestion.type === 'multi' && (
+              <AnswerMulti
+                options={currentQuestion.options}
+                onSelect={handleAnswer}
+                selectedOptions={myAnswer?.selectedOption}
+                correctAnswer={reveal?.correct}
+                revealed={phase === GAME_PHASE.REVEAL}
+                disabled={!!myAnswer || phase === GAME_PHASE.REVEAL}
+              />
+            )}
+            {currentQuestion.type === 'rank' && (
+              <AnswerRank
+                options={currentQuestion.options}
+                onSelect={handleAnswer}
+                selectedOrder={myAnswer?.selectedOption}
+                correctAnswer={reveal?.correct}
+                revealed={phase === GAME_PHASE.REVEAL}
+                disabled={!!myAnswer || phase === GAME_PHASE.REVEAL}
+              />
+            )}
+            {currentQuestion.type === 'swipe' && (
+              <AnswerSwipe
+                options={currentQuestion.options}
+                onSelect={handleAnswer}
+                selectedOption={myAnswer?.selectedOption}
+                correctAnswer={reveal?.correct}
+                revealed={phase === GAME_PHASE.REVEAL}
+                disabled={!!myAnswer || phase === GAME_PHASE.REVEAL}
+              />
+            )}
+            {currentQuestion.type === 'type-in' && (
+              <AnswerTypeIn
+                onSelect={handleAnswer}
+                selectedOption={myAnswer?.selectedOption}
+                correctAnswer={reveal?.correct}
+                revealed={phase === GAME_PHASE.REVEAL}
+                disabled={!!myAnswer || phase === GAME_PHASE.REVEAL}
+              />
+            )}
           </motion.div>
 
           <div className="flex-1 min-h-[10px]"></div>

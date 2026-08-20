@@ -43,3 +43,48 @@ export function calculateScore(timeRemainingMs, totalTimeMs) {
 export function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+export function calculatePartialCredit(selected, correct, type) {
+  if (type === 'single' || type === 'swipe') {
+    return selected === correct ? 1.0 : 0.0;
+  }
+  
+  if (type === 'multi') {
+    if (!Array.isArray(selected) || !Array.isArray(correct)) return 0;
+    const correctSet = new Set(correct);
+    const selectedSet = new Set(selected);
+    if (correctSet.size === 0) return 0;
+    
+    // Exact match
+    if (correctSet.size === selectedSet.size && [...correctSet].every(x => selectedSet.has(x))) return 1.0;
+    
+    let correctGuesses = 0;
+    for (const s of selectedSet) {
+      if (correctSet.has(s)) correctGuesses++;
+      else return 0; // strict penalty for any wrong guess in multi
+    }
+    if (correctGuesses > 0) return 0.3;
+    return 0;
+  }
+  
+  if (type === 'rank') {
+    if (!Array.isArray(selected) || !Array.isArray(correct)) return 0;
+    if (selected.join('|') === correct.join('|')) return 1.0;
+    
+    // Any overlap in absolute position? Or just give 30% for not perfect?
+    // The user said: "they should get 30% credit". 
+    if (selected.length === correct.length && selected.length > 0) return 0.3;
+    return 0.0;
+  }
+  
+  if (type === 'type-in') {
+    const s = String(selected || '').toLowerCase().trim();
+    const c = String(correct || '').toLowerCase().trim();
+    if (s === c) return 1.0;
+    if (s.length > 3 && c.includes(s)) return 0.3;
+    if (c.length > 3 && s.includes(c)) return 0.3;
+    return 0.0;
+  }
+  
+  return selected === correct ? 1.0 : 0.0;
+}

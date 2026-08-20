@@ -1,85 +1,160 @@
-import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
-import Button from '../components/ui/Button.jsx';
-
-const FEATURES = [
-  { icon: '🤖', title: 'AI-Generated Questions', desc: 'Live tech news converted into quiz questions by Gemini 2.0 Flash' },
-  { icon: '⚡', title: 'Real-Time Multiplayer', desc: 'Compete with friends simultaneously via WebSockets' },
-  { icon: '🏷️', title: 'Pick Your Topics', desc: 'AI/ML, Cybersecurity, Cloud, Web Dev, and more' },
-  { icon: '🔗', title: 'Share Instantly', desc: 'Invite players via link or 6-char room code' },
-];
+import { motion } from 'framer-motion';
 
 export default function LandingPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
   return (
-    <div className="min-h-screen animated-bg flex flex-col">
-      {/* Nav */}
-      <nav className="flex items-center justify-between px-6 py-4 max-w-6xl mx-auto w-full">
-        <span className="text-xl font-black font-display gradient-text">QuizRush ⚡</span>
-        <Button
-          onClick={() => navigate(user ? '/lobby' : '/login')}
-          size="sm"
-        >
-          {user ? 'Go to Lobby' : 'Get Started'}
-        </Button>
+    <div className="min-h-screen bg-bg text-text font-sans flex flex-col">
+      {/* Navbar */}
+      <nav className="flex items-center justify-between px-12 py-5 border-b border-border">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-[9px] bg-surface-inverted text-accent flex items-center justify-center font-bold text-base">
+            Q
+          </div>
+          <span className="font-bold text-[17px] tracking-tight">QuizRush</span>
+        </div>
+        <div className="flex items-center gap-7 font-medium text-sm text-text-muted">
+          <span className="cursor-pointer hover:text-text">How it works</span>
+          <span className="cursor-pointer hover:text-text">Today's feed</span>
+          <span className="cursor-pointer hover:text-text">Leaderboards</span>
+          <div className="flex items-center bg-black/5 dark:bg-white/5 rounded-full p-1 cursor-pointer">
+            <span className="px-3 py-1.5 rounded-full bg-surface-base text-text font-semibold text-xs shadow-sm">Light</span>
+            <span className="px-3 py-1.5 font-medium text-xs">Dark</span>
+          </div>
+          <button 
+            onClick={() => navigate(user ? '/lobby' : '/login')}
+            className="px-4 py-2.5 rounded-xl bg-surface-inverted text-text-inverted font-semibold text-sm hover:opacity-90 transition-opacity"
+          >
+            {user ? 'Lobby' : 'Log in'}
+          </button>
+        </div>
       </nav>
 
-      {/* Hero */}
-      <main className="flex-1 flex flex-col items-center justify-center text-center px-4 py-20">
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: 'easeOut' }}
-          className="space-y-6 max-w-3xl"
-        >
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass text-xs font-semibold text-violet-300 border border-violet-500/30">
-            <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-            Powered by Gemini 2.0 Flash + Live RSS
-          </div>
-
-          <h1 className="text-5xl md:text-7xl font-black font-display leading-none">
-            <span className="gradient-text">Real-Time</span>
-            <br />Tech Trivia Wars
+      {/* Main Content */}
+      <main className="px-12 pt-12 pb-20 grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr] gap-14 items-start max-w-7xl mx-auto w-full">
+        
+        {/* Left Column */}
+        <div className="flex flex-col gap-6">
+          <span className="self-start flex items-center gap-2 font-mono font-medium text-[11px] tracking-[0.12em] text-text-muted border border-border-heavy rounded-full px-3 py-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-danger animate-pulse"></span>
+            FEED SYNCED 11 MIN AGO
+          </span>
+          
+          <h1 className="m-0 font-bold text-5xl md:text-[58px] leading-[1.02] tracking-[-0.04em] text-balance">
+            The tech news,<br />played as a<br />
+            <span className="bg-accent text-surface-inverted px-2 rounded-md inline-block mt-1">quiz</span>
           </h1>
-
-          <p className="text-xl text-slate-400 max-w-xl mx-auto leading-relaxed">
-            Compete with friends on fresh tech questions generated from today&rsquo;s news.
-            No stale databases — just live knowledge battles.
+          
+          <p className="m-0 font-normal text-lg leading-[1.55] text-text-muted max-w-[440px] text-balance">
+            Every question is written from an article published today, in whichever format fits it — pick one, rank four, or type the answer. Ten seconds. Up to eight players.
           </p>
-
-          <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
-            <Button size="lg" onClick={() => navigate(user ? '/lobby' : '/login')}>
-              🚀 Start Playing
-            </Button>
-            <Button size="lg" variant="secondary" onClick={() => navigate('/login')}>
-              Learn More
-            </Button>
-          </div>
-        </motion.div>
-
-        {/* Feature grid */}
-        <motion.div
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-20 max-w-5xl w-full px-4"
-          initial={{ opacity: 0, y: 60 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.6 }}
-        >
-          {FEATURES.map((f, i) => (
-            <motion.div
-              key={f.title}
-              className="glass rounded-2xl p-5 text-left hover:border-violet-500/30 transition-colors"
-              whileHover={{ y: -4 }}
-              transition={{ delay: i * 0.05 }}
+          
+          <div className="flex gap-3 mt-2">
+            <button 
+              onClick={() => navigate(user ? '/lobby' : '/login')}
+              className="px-6 py-4 rounded-xl bg-surface-inverted text-text-inverted font-semibold text-base hover:opacity-90 transition-opacity"
             >
-              <div className="text-3xl mb-3">{f.icon}</div>
-              <h3 className="font-bold text-white mb-1 font-display">{f.title}</h3>
-              <p className="text-slate-400 text-sm leading-snug">{f.desc}</p>
+              Start a room
+            </button>
+            <button 
+              onClick={() => navigate('/login')}
+              className="px-6 py-4 rounded-xl border-2 border-border-heavy font-semibold text-base hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+            >
+              Join with a code
+            </button>
+          </div>
+          
+          <div className="flex gap-8 mt-3 border-t border-border pt-4">
+            <div className="flex flex-col gap-0.5">
+              <span className="font-bold text-[26px]">1,204</span>
+              <span className="font-mono font-medium text-[11px] text-text-muted tracking-[0.08em] uppercase">Questions Today</span>
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <span className="font-bold text-[26px]">38</span>
+              <span className="font-mono font-medium text-[11px] text-text-muted tracking-[0.08em] uppercase">Live Rooms</span>
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <span className="font-bold text-[26px]">5</span>
+              <span className="font-mono font-medium text-[11px] text-text-muted tracking-[0.08em] uppercase">Answer Formats</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column (Demo UI) */}
+        <div className="flex flex-col gap-3.5 mt-8 lg:mt-0">
+          <motion.div 
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="bg-surface-base border border-border rounded-[18px] p-6 shadow-[0_12px_30px_rgba(20,22,26,0.07)] dark:shadow-none flex flex-col gap-4"
+          >
+            <div className="flex items-center justify-between">
+              <span className="font-mono font-semibold text-[10px] tracking-[0.14em] text-surface-inverted bg-accent px-2 py-1 rounded-[5px]">
+                RANK THESE
+              </span>
+              <div className="flex-1 h-[5px] rounded-full bg-black/10 dark:bg-white/10 mx-3.5 overflow-hidden">
+                <div className="w-[72%] h-full bg-surface-inverted rounded-full"></div>
+              </div>
+              <span className="font-mono font-bold text-sm">7</span>
+            </div>
+            
+            <span className="font-semibold text-[21px] leading-[1.25] text-balance">
+              Order these funding rounds announced this week, largest first.
+            </span>
+            
+            <div className="flex flex-col gap-2 mt-1">
+              <div className="flex items-center gap-3 border border-border-heavy rounded-[11px] p-3 bg-surface-alt">
+                <span className="font-mono font-bold text-xs text-text-muted">1</span>
+                <span className="flex-1 font-medium text-sm">Vector database co.</span>
+                <span className="tracking-[2px] text-text-muted">⠿</span>
+              </div>
+              <div className="flex items-center gap-3 border border-surface-inverted rounded-[11px] p-3 bg-surface-base shadow-[0_4px_12px_rgba(20,22,26,0.1)] dark:shadow-none -my-1 relative z-10 scale-[1.02]">
+                <span className="font-mono font-bold text-xs text-surface-inverted">2</span>
+                <span className="flex-1 font-medium text-sm font-bold">Robotics startup</span>
+                <span className="tracking-[2px] text-surface-inverted">⠿</span>
+              </div>
+              <div className="flex items-center gap-3 border border-border-heavy rounded-[11px] p-3 bg-surface-alt">
+                <span className="font-mono font-bold text-xs text-text-muted">3</span>
+                <span className="flex-1 font-medium text-sm">Chip design tool</span>
+                <span className="tracking-[2px] text-text-muted">⠿</span>
+              </div>
+            </div>
+          </motion.div>
+
+          <div className="flex gap-2.5">
+            <motion.div 
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.1 }}
+              className="flex-1 bg-surface-inverted text-text-inverted rounded-[14px] p-4 flex flex-col gap-1"
+            >
+              <span className="font-mono font-medium text-[10px] tracking-[0.12em] opacity-60">SPEED BONUS</span>
+              <span className="font-bold text-[20px]">+120</span>
             </motion.div>
-          ))}
-        </motion.div>
+            
+            <motion.div 
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.15 }}
+              className="flex-1 bg-surface-base border border-border rounded-[14px] p-4 flex flex-col gap-1"
+            >
+              <span className="font-mono font-medium text-[10px] tracking-[0.12em] text-text-muted">STREAK</span>
+              <span className="font-bold text-[20px]">×3</span>
+            </motion.div>
+            
+            <motion.div 
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="flex-1 bg-danger text-[#14161A] rounded-[14px] p-4 flex flex-col gap-1"
+            >
+              <span className="font-mono font-medium text-[10px] tracking-[0.12em] opacity-65">WAGER</span>
+              <span className="font-bold text-[20px]">2×</span>
+            </motion.div>
+          </div>
+        </div>
       </main>
     </div>
   );

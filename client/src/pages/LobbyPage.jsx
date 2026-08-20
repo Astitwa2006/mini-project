@@ -6,10 +6,7 @@ import { useGame } from '../context/GameContext.jsx';
 import { useSocket } from '../context/SocketContext.jsx';
 import { useGameSocket } from '../hooks/useGameSocket.js';
 import { SOCKET_EVENTS } from '../utils/constants.js';
-import Button from '../components/ui/Button.jsx';
-import Modal from '../components/ui/Modal.jsx';
 import TopicPicker from '../components/lobby/TopicPicker.jsx';
-import RoomCard from '../components/lobby/RoomCard.jsx';
 import { DIFFICULTY } from '../utils/constants.js';
 
 export default function LobbyPage() {
@@ -19,15 +16,14 @@ export default function LobbyPage() {
   const { createRoom } = useGameSocket();
   const navigate = useNavigate();
 
-  const [showCreate, setShowCreate] = useState(false);
-  const [joinCode,   setJoinCode]   = useState('');
-  const [creating,   setCreating]   = useState(false);
+  const [joinCode, setJoinCode] = useState('');
+  const [creating, setCreating] = useState(false);
 
   // Room config state
-  const [topics,        setTopics]        = useState(['startups']);
+  const [topics, setTopics] = useState(['startups']);
   const [questionCount, setQuestionCount] = useState(10);
-  const [difficulty,    setDifficulty]    = useState('any');
-  const [maxPlayers,    setMaxPlayers]    = useState(8);
+  const [difficulty, setDifficulty] = useState('any');
+  const [maxPlayers, setMaxPlayers] = useState(8);
 
   function handleCreateRoom() {
     if (!topics.length) return;
@@ -50,115 +46,107 @@ export default function LobbyPage() {
   function handleJoinRoom(e) {
     e.preventDefault();
     const code = joinCode.trim().toUpperCase();
-    if (code.length !== 6) return;
+    if (code.length !== 5 && code.length !== 6) return;
     navigate(`/join/${code}`);
   }
 
   return (
-    <div className="min-h-screen animated-bg">
+    <div className="min-h-screen box-border bg-bg text-text font-sans dark flex flex-col">
       {/* Navbar */}
-      <nav className="flex items-center justify-between px-6 py-4 border-b border-white/5">
-        <span className="text-xl font-black font-display gradient-text">QuizRush ⚡</span>
+      <nav className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-white/5">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center font-bold text-lg text-[#0B0D10]">Q</div>
+          <span className="text-xl font-bold tracking-tight">QuizRush</span>
+        </div>
         <div className="flex items-center gap-4">
-          {profile?.avatar_url && (
-            <img src={profile.avatar_url} alt="avatar" className="w-8 h-8 rounded-full" />
-          )}
-          <span className="text-slate-300 text-sm hidden sm:block">{profile?.username || user?.email}</span>
-          <Button variant="ghost" size="sm" onClick={signOut}>Sign out</Button>
+          <span className="text-[#EDEAE3]/60 text-sm hidden sm:block">{profile?.username || user?.email}</span>
+          <button onClick={signOut} className="font-medium text-sm text-[#EDEAE3]/80 hover:text-white">Sign out</button>
         </div>
       </nav>
 
-      <div className="max-w-3xl mx-auto px-4 py-12 space-y-8">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <h1 className="text-4xl font-black font-display">
-            Welcome back, <span className="gradient-text">{profile?.username?.split(' ')[0] || 'Player'}</span> 👋
-          </h1>
-          <p className="text-slate-400 mt-2">Create a new room or join an existing one.</p>
-        </motion.div>
+      <div className="flex-1 max-w-4xl w-full mx-auto px-6 py-12 flex flex-col md:flex-row gap-8">
+        
+        {/* Left Col: Create Room */}
+        <div className="flex-1 space-y-6">
+          <div>
+            <h1 className="text-[34px] font-bold leading-tight tracking-tight">
+              Host a room
+            </h1>
+            <p className="text-[#EDEAE3]/50 mt-1">Configure topics and invite your friends.</p>
+          </div>
 
-        {/* Action cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <RoomCard
-            title="Create Room"
-            description="Set topics, difficulty, and invite friends via link or code."
-            icon="🎮"
-            variant="primary"
-            onClick={() => setShowCreate(true)}
-          />
+          <div className="bg-white/5 border border-white/10 rounded-[18px] p-6 space-y-6">
+            <TopicPicker selected={topics} onChange={setTopics} />
 
-          <motion.div className="glass rounded-2xl p-6 flex flex-col justify-center border border-emerald-500/30 group bg-white/5 hover:bg-white/10 transition-colors" whileHover={{ y: -2 }}>
-            <div className="flex items-center gap-4 mb-2">
-              <div className="text-4xl">🔑</div>
-              <h2 className="text-2xl font-bold font-display text-white group-hover:text-emerald-300 transition-colors">Join Room</h2>
-            </div>
-            <p className="text-slate-400 text-sm ml-14 mb-4">Enter a 6-character room code to jump in.</p>
-            <form onSubmit={handleJoinRoom} className="flex gap-2 ml-14">
+            <div className="space-y-3">
+              <div className="flex justify-between text-sm">
+                <span className="text-[#EDEAE3]/50 font-mono tracking-widest text-[10px]">QUESTIONS</span>
+                <span className="font-bold text-accent">{questionCount}</span>
+              </div>
               <input
-                value={joinCode}
-                onChange={(e) => setJoinCode(e.target.value.toUpperCase().slice(0, 6))}
-                placeholder="ABC123"
-                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white
-                           font-mono text-lg tracking-widest uppercase focus:outline-none focus:border-violet-500"
+                type="range" min={5} max={20} value={questionCount}
+                onChange={(e) => setQuestionCount(Number(e.target.value))}
+                className="w-full accent-accent"
               />
-              <Button type="submit" disabled={joinCode.length !== 6}>Join</Button>
-            </form>
-          </motion.div>
-        </div>
-      </div>
-
-      {/* Create Room Modal */}
-      <Modal isOpen={showCreate} onClose={() => setShowCreate(false)} title="Create Room" size="lg">
-        <div className="space-y-5">
-          <TopicPicker selected={topics} onChange={setTopics} />
-
-          {/* Question count */}
-          <div className="space-y-2">
-            <label className="text-sm text-slate-400">Questions: <span className="text-white font-bold">{questionCount}</span></label>
-            <input
-              type="range" min={5} max={20} value={questionCount}
-              onChange={(e) => setQuestionCount(Number(e.target.value))}
-              className="w-full accent-violet-500"
-            />
-          </div>
-
-          {/* Difficulty */}
-          <div className="space-y-2">
-            <label className="text-sm text-slate-400">Difficulty</label>
-            <div className="flex gap-2">
-              {Object.entries(DIFFICULTY).map(([key, { label, color }]) => (
-                <button
-                  key={key}
-                  onClick={() => setDifficulty(key)}
-                  className={`flex-1 py-2 rounded-xl text-sm font-semibold border transition-all
-                    ${difficulty === key ? 'text-white border-transparent' : 'border-white/10 text-slate-400 hover:border-white/20'}`}
-                  style={difficulty === key ? { backgroundColor: color } : {}}
-                >
-                  {label}
-                </button>
-              ))}
             </div>
-          </div>
 
-          {/* Max players */}
-          <div className="space-y-2">
-            <label className="text-sm text-slate-400">Max Players: <span className="text-white font-bold">{maxPlayers}</span></label>
-            <input
-              type="range" min={2} max={20} value={maxPlayers}
-              onChange={(e) => setMaxPlayers(Number(e.target.value))}
-              className="w-full accent-violet-500"
-            />
-          </div>
+            <div className="space-y-3">
+              <span className="text-[#EDEAE3]/50 font-mono tracking-widest text-[10px] block">DIFFICULTY</span>
+              <div className="flex gap-2">
+                {Object.entries(DIFFICULTY).map(([key, { label, color }]) => (
+                  <button
+                    key={key}
+                    onClick={() => setDifficulty(key)}
+                    className={`flex-1 py-2.5 rounded-xl text-sm font-semibold border transition-all
+                      ${difficulty === key ? 'text-[#0B0D10] border-transparent' : 'border-white/10 text-[#EDEAE3]/60 hover:bg-white/5'}`}
+                    style={difficulty === key ? { backgroundColor: color || '#C8FF4D' } : {}}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-          <Button
-            className="w-full" size="lg"
-            loading={creating}
-            disabled={!topics.length || creating}
-            onClick={handleCreateRoom}
-          >
-            🚀 Create Room
-          </Button>
+            <button
+              className="w-full h-[54px] rounded-xl bg-accent flex items-center justify-center font-semibold text-[17px] text-[#0B0D10] disabled:opacity-50 hover:brightness-110 transition-all mt-4"
+              disabled={!topics.length || creating}
+              onClick={handleCreateRoom}
+            >
+              {creating ? 'Creating...' : 'Create Room'}
+            </button>
+          </div>
         </div>
-      </Modal>
+
+        {/* Right Col: Join Room */}
+        <div className="flex-1 space-y-6">
+          <div>
+            <h1 className="text-[34px] font-bold leading-tight tracking-tight">
+              Join a room
+            </h1>
+            <p className="text-[#EDEAE3]/50 mt-1">Got a code? Enter it below.</p>
+          </div>
+
+          <form onSubmit={handleJoinRoom} className="bg-white/5 border border-white/10 rounded-[18px] p-6 flex flex-col gap-4">
+             <div className="flex flex-col gap-1.5">
+                <span className="font-mono font-medium text-[10px] tracking-[0.1em] text-[#EDEAE3]/40">ROOM CODE</span>
+                <input
+                  value={joinCode}
+                  onChange={(e) => setJoinCode(e.target.value.toUpperCase().slice(0, 6))}
+                  placeholder="7KD9F"
+                  className="h-[64px] rounded-xl bg-black/20 border border-white/10 px-4 font-mono font-bold text-3xl tracking-widest text-center text-accent placeholder:text-[#EDEAE3]/20 focus:outline-none focus:border-accent transition-colors"
+                />
+              </div>
+              <button 
+                type="submit" 
+                disabled={joinCode.length < 5}
+                className="w-full h-[54px] rounded-xl bg-white/10 border border-white/15 flex items-center justify-center font-semibold text-[17px] text-white disabled:opacity-50 hover:bg-white/20 transition-all mt-2"
+              >
+                Join
+              </button>
+          </form>
+        </div>
+
+      </div>
     </div>
   );
 }

@@ -8,7 +8,13 @@ import { SOCKET_EVENTS } from '../utils/constants.js';
 import { useSocket } from '../context/SocketContext.jsx';
 import Loader from '../components/ui/Loader.jsx';
 
-const AVATAR_COLORS = ['bg-accent', 'bg-danger', 'bg-[#EDEAE3]', 'bg-[#8FD6FF]', 'bg-[#E8E4DA]'];
+const AVATARS = [
+  { color: 'bg-accent', icon: '🤓' },
+  { color: 'bg-danger', icon: '👽' },
+  { color: 'bg-[#EDEAE3]', icon: '🤖' },
+  { color: 'bg-[#8FD6FF]', icon: '👻' },
+  { color: 'bg-[#E8E4DA]', icon: '👾' },
+];
 
 export default function JoinPage() {
   const { code } = useParams();
@@ -84,13 +90,13 @@ export default function JoinPage() {
         <div className="flex flex-col gap-3">
           <span className="font-mono font-medium text-[10px] tracking-[0.1em] text-[#EDEAE3]/40">PICK AN AVATAR</span>
           <div className="flex items-center gap-3">
-            {AVATAR_COLORS.map((color, i) => (
+            {AVATARS.map((avatar, i) => (
               <button 
                 key={i}
                 onClick={() => setAvatarIndex(i)}
-                className={`w-[48px] h-[48px] rounded-[14px] ${color} flex items-center justify-center font-bold text-lg text-[#0B0D10] transition-transform ${avatarIndex === i ? 'scale-110 ring-2 ring-white ring-offset-2 ring-offset-bg' : 'opacity-70 hover:opacity-100'}`}
+                className={`w-[48px] h-[48px] rounded-[14px] ${avatar.color} flex items-center justify-center text-2xl transition-transform ${avatarIndex === i ? 'scale-110 ring-2 ring-white ring-offset-2 ring-offset-bg' : 'opacity-70 hover:opacity-100'}`}
               >
-                {nickname ? nickname.substring(0, 2).toUpperCase() : '??'}
+                {avatar.icon}
               </button>
             ))}
           </div>

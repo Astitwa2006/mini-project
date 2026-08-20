@@ -45,7 +45,7 @@ export default function LandingPage() {
           
           <h1 className="m-0 font-bold text-5xl md:text-[58px] leading-[1.02] tracking-[-0.04em] text-balance">
             The tech news,<br />played as a<br />
-            <span className="bg-accent text-surface-inverted px-2 rounded-md inline-block mt-1">quiz</span>
+            <span className="bg-accent text-surface-inverted px-2 rounded-md">quiz</span>
           </h1>
           
           <p className="m-0 font-normal text-lg leading-[1.55] text-text-muted max-w-[440px] text-balance">

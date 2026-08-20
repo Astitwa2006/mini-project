@@ -75,7 +75,7 @@ function finalizeQuestion(parsed, article) {
 
 /** Transient errors (server-side hiccups) are worth a retry; quota/rate-limit errors are not. */
 function isTransientError(message = '') {
-  return /503|overloaded|Service Unavailable/i.test(message);
+  return /503|overloaded|Service Unavailable|Unexpected token|Expected double-quoted/i.test(message);
 }
 
 /**
@@ -95,7 +95,9 @@ export async function generateQuestionFromArticle(article, retriesLeft = 1) {
     const prompt = `${BATCH_SYSTEM_PROMPT}\n\n${BATCH_PROMPT_TEMPLATE([article])}`;
 
     const result = await model.generateContent(prompt);
-    const parsed = JSON.parse(result.response.text());
+    let text = result.response.text();
+    text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    const parsed = JSON.parse(text);
 
     const item = Array.isArray(parsed?.questions) ? parsed.questions[0] : parsed;
     return finalizeQuestion(item, article);
@@ -169,7 +171,9 @@ export async function generateQuestionsBatch(articles, retriesLeft = 1) {
     const prompt = `${BATCH_SYSTEM_PROMPT}\n\n${BATCH_PROMPT_TEMPLATE(articles)}`;
 
     const result = await model.generateContent(prompt);
-    const parsed = JSON.parse(result.response.text());
+    let text = result.response.text();
+    text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    const parsed = JSON.parse(text);
     const items  = Array.isArray(parsed?.questions) ? parsed.questions : [];
 
     return items

@@ -25,6 +25,9 @@ import { logger } from './utils/logger.js';
 // ── Express setup ────────────────────────────────────────────────
 const app = express();
 
+// Trust the reverse proxy (Render) so rate limiting uses correct IPs
+app.set('trust proxy', 1);
+
 app.use(cors({ origin: env.CLIENT_URL, credentials: true }));
 app.use(express.json());
 app.use(rateLimiter);

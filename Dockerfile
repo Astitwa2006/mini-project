@@ -8,7 +8,7 @@
 # ============================================================
 
 # ---- Stage 1: install workspace deps + build the client ----
-FROM node:20-alpine AS build
+FROM node:22-alpine AS build
 WORKDIR /app
 
 # Copy only manifests first so this layer is cache-friendly
@@ -30,7 +30,7 @@ COPY . .
 RUN npm run build --workspace=client
 
 # ---- Stage 2: production runtime (server only) ----
-FROM node:20-alpine AS production
+FROM node:22-alpine AS production
 WORKDIR /app
 ENV NODE_ENV=production
 

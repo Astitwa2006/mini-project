@@ -23,76 +23,85 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-bg text-text font-sans flex flex-col">
-      {/* Navbar */}
-      <nav className="flex items-center justify-between px-10 py-6 max-w-7xl mx-auto w-full">
+
+      {/* ── Navbar ────────────────────────────────────────────────── */}
+      <nav className="flex items-center justify-between px-12 py-5 border-b border-border w-full">
+        {/* Logo */}
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-[9px] bg-surface-inverted text-accent flex items-center justify-center font-bold text-base">
+          <div className="w-[30px] h-[30px] rounded-[9px] bg-surface-inverted text-accent flex items-center justify-center font-bold text-base">
             Q
           </div>
-          <span className="font-bold text-[17px] tracking-tight">QuizRush</span>
+          <span className="font-bold text-[17px] tracking-[-0.02em]">QuizRush</span>
         </div>
+
+        {/* Right nav */}
         <div className="flex items-center gap-7 font-medium text-sm text-text-muted">
-          <span className="cursor-pointer hover:text-text">How it works</span>
-          <span className="cursor-pointer hover:text-text">Today's feed</span>
-          <span className="cursor-pointer hover:text-text">Leaderboards</span>
-          <div className="flex items-center bg-black/5 dark:bg-white/5 rounded-full p-1 cursor-pointer">
-            <span 
+          <span className="cursor-pointer hover:text-text transition-colors">How it works</span>
+          <span className="cursor-pointer hover:text-text transition-colors">Today's feed</span>
+          <span className="cursor-pointer hover:text-text transition-colors">Leaderboards</span>
+
+          {/* Theme toggle */}
+          <div className="flex items-center bg-black/[0.07] dark:bg-white/[0.07] rounded-full p-[3px]">
+            <span
               onClick={() => toggleTheme(false)}
-              className={`px-3 py-1.5 rounded-full text-xs transition-colors ${!isDark ? 'bg-surface-base text-text font-semibold shadow-sm' : 'font-medium text-text-muted hover:text-text'}`}
+              className={`px-[11px] py-[5px] rounded-full text-[12px] transition-all cursor-pointer ${!isDark ? 'bg-surface-base text-text font-semibold shadow-sm' : 'font-medium text-text-muted hover:text-text'}`}
             >
               Light
             </span>
-            <span 
+            <span
               onClick={() => toggleTheme(true)}
-              className={`px-3 py-1.5 rounded-full text-xs transition-colors ${isDark ? 'bg-surface-base text-text font-semibold shadow-sm' : 'font-medium text-text-muted hover:text-text'}`}
+              className={`px-[11px] py-[5px] rounded-full text-[12px] transition-all cursor-pointer ${isDark ? 'bg-surface-base text-text font-semibold shadow-sm' : 'font-medium text-text-muted hover:text-text'}`}
             >
               Dark
             </span>
           </div>
-          <button 
+
+          <button
             onClick={() => navigate(user ? '/lobby' : '/login')}
-            className="px-4 py-2.5 rounded-xl bg-surface-inverted text-text-inverted font-semibold text-sm hover:opacity-90 transition-opacity"
+            className="px-[18px] py-[10px] rounded-[10px] bg-surface-inverted text-text-inverted font-semibold text-[14px] hover:opacity-90 transition-opacity"
           >
             {user ? 'Lobby' : 'Log in'}
           </button>
         </div>
       </nav>
 
-      {/* Main Content */}
-      <main className="px-12 pt-12 pb-20 grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr] gap-14 items-start max-w-7xl mx-auto w-full">
+      {/* ── Main Content ──────────────────────────────────────────── */}
+      <main className="flex-1 px-12 pt-[34px] pb-20 grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr] gap-14 items-start max-w-[1280px] mx-auto w-full">
         
         {/* Left Column */}
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-[22px]">
+
           <span className="self-start flex items-center gap-2 font-mono font-medium text-[11px] tracking-[0.12em] text-text-muted border border-border-heavy rounded-full px-3 py-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-danger animate-pulse"></span>
             FEED SYNCED 11 MIN AGO
           </span>
           
-          <h1 className="m-0 font-bold text-5xl md:text-[58px] leading-[1.02] tracking-[-0.04em] text-balance">
+          <h1 className="m-0 font-bold text-[58px] leading-[1.02] tracking-[-0.04em] text-balance">
             The tech news,<br />played as a<br />
-            <span className="bg-accent text-surface-inverted px-2 rounded-md">quiz</span>
+            {/* text-[#14161A] is always dark — readable on lime accent in both modes */}
+            <span className="bg-accent text-[#14161A] px-2 rounded-[6px]">quiz</span>
           </h1>
           
-          <p className="m-0 font-normal text-lg leading-[1.55] text-text-muted max-w-[440px] text-balance">
+          <p className="m-0 font-normal text-[18px] leading-[1.55] text-text-muted max-w-[440px] text-balance">
             Every question is written from an article published today, in whichever format fits it — pick one, rank four, or type the answer. Ten seconds. Up to eight players.
           </p>
           
-          <div className="flex gap-3 mt-2">
-            <button 
+          <div className="flex gap-3 mt-[6px]">
+            <button
               onClick={() => navigate(user ? '/lobby' : '/login')}
-              className="px-6 py-4 rounded-xl bg-surface-inverted text-text-inverted font-semibold text-base hover:opacity-90 transition-opacity"
+              className="px-[26px] py-[15px] rounded-[12px] bg-surface-inverted text-text-inverted font-semibold text-[16px] hover:opacity-90 transition-opacity"
             >
               Start a room
             </button>
-            <button 
-              onClick={() => navigate('/login')}
-              className="px-6 py-4 rounded-xl border-2 border-border-heavy font-semibold text-base hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+            <button
+              onClick={() => navigate('/join')}
+              className="px-[26px] py-[15px] rounded-[12px] border-[1.5px] border-border-heavy font-semibold text-[16px] hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
             >
               Join with a code
             </button>
           </div>
           
-          <div className="flex gap-8 mt-3 border-t border-border pt-4">
+          <div className="flex gap-[34px] mt-3 border-t border-border pt-[14px]">
             <div className="flex flex-col gap-0.5">
               <span className="font-bold text-[26px]">1,204</span>
               <span className="font-mono font-medium text-[11px] text-text-muted tracking-[0.08em] uppercase">Questions Today</span>
@@ -109,17 +118,20 @@ export default function LandingPage() {
         </div>
 
         {/* Right Column (Demo UI) */}
-        <div className="flex flex-col gap-3.5 mt-8 lg:mt-0">
+        <div className="flex flex-col gap-[14px]">
+
+          {/* Demo card */}
           <motion.div 
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="bg-surface-base border border-border rounded-[18px] p-6 shadow-[0_12px_30px_rgba(20,22,26,0.07)] dark:shadow-none flex flex-col gap-4"
+            className="bg-surface-base border border-border rounded-[18px] p-[22px] shadow-[0_12px_30px_rgba(20,22,26,0.07)] dark:shadow-none flex flex-col gap-[14px]"
           >
-            <div className="flex items-center justify-between">
-              <span className="font-mono font-semibold text-[10px] tracking-[0.14em] text-surface-inverted bg-accent px-2 py-1 rounded-[5px]">
+            <div className="flex items-center justify-between gap-3">
+              {/* Badge: always dark text on lime — never inherit theme color */}
+              <span className="font-mono font-semibold text-[10px] tracking-[0.14em] text-[#14161A] bg-accent px-2 py-1 rounded-[5px]">
                 RANK THESE
               </span>
-              <div className="flex-1 h-[5px] rounded-full bg-black/10 dark:bg-white/10 mx-3.5 overflow-hidden">
+              <div className="flex-1 h-[5px] rounded-full bg-black/10 dark:bg-white/10 overflow-hidden">
                 <div className="w-[72%] h-full bg-surface-inverted rounded-full"></div>
               </div>
               <span className="font-mono font-bold text-sm">7</span>
@@ -129,18 +141,19 @@ export default function LandingPage() {
               Order these funding rounds announced this week, largest first.
             </span>
             
-            <div className="flex flex-col gap-2 mt-1">
-              <div className="flex items-center gap-3 border border-border-heavy rounded-[11px] p-3 bg-surface-alt">
+            <div className="flex flex-col gap-[7px]">
+              <div className="flex items-center gap-3 border border-border-heavy rounded-[11px] py-3 px-[14px] bg-surface-alt">
                 <span className="font-mono font-bold text-xs text-text-muted">1</span>
                 <span className="flex-1 font-medium text-sm">Vector database co.</span>
                 <span className="tracking-[2px] text-text-muted">⠿</span>
               </div>
-              <div className="flex items-center gap-3 border border-surface-inverted rounded-[11px] p-3 bg-surface-base shadow-[0_4px_12px_rgba(20,22,26,0.1)] dark:shadow-none -my-1 relative z-10 scale-[1.02]">
+              {/* Selected / active row */}
+              <div className="flex items-center gap-3 border border-surface-inverted rounded-[11px] py-3 px-[14px] bg-surface-base shadow-[0_4px_12px_rgba(20,22,26,0.1)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.35)] -my-1 relative z-10 scale-[1.02]">
                 <span className="font-mono font-bold text-xs text-surface-inverted">2</span>
-                <span className="flex-1 font-medium text-sm font-bold">Robotics startup</span>
+                <span className="flex-1 font-semibold text-sm">Robotics startup</span>
                 <span className="tracking-[2px] text-surface-inverted">⠿</span>
               </div>
-              <div className="flex items-center gap-3 border border-border-heavy rounded-[11px] p-3 bg-surface-alt">
+              <div className="flex items-center gap-3 border border-border-heavy rounded-[11px] py-3 px-[14px] bg-surface-alt">
                 <span className="font-mono font-bold text-xs text-text-muted">3</span>
                 <span className="flex-1 font-medium text-sm">Chip design tool</span>
                 <span className="tracking-[2px] text-text-muted">⠿</span>
@@ -148,12 +161,13 @@ export default function LandingPage() {
             </div>
           </motion.div>
 
-          <div className="flex gap-2.5">
+          {/* Stat tiles */}
+          <div className="flex gap-[10px]">
             <motion.div 
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.1 }}
-              className="flex-1 bg-surface-inverted text-text-inverted rounded-[14px] p-4 flex flex-col gap-1"
+              className="flex-1 bg-surface-inverted text-text-inverted rounded-[14px] p-4 flex flex-col gap-[3px]"
             >
               <span className="font-mono font-medium text-[10px] tracking-[0.12em] opacity-60">SPEED BONUS</span>
               <span className="font-bold text-[20px]">+120</span>
@@ -163,7 +177,7 @@ export default function LandingPage() {
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.15 }}
-              className="flex-1 bg-surface-base border border-border rounded-[14px] p-4 flex flex-col gap-1"
+              className="flex-1 bg-surface-base border border-border rounded-[14px] p-4 flex flex-col gap-[3px]"
             >
               <span className="font-mono font-medium text-[10px] tracking-[0.12em] text-text-muted">STREAK</span>
               <span className="font-bold text-[20px]">×3</span>
@@ -173,7 +187,7 @@ export default function LandingPage() {
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.2 }}
-              className="flex-1 bg-danger text-[#14161A] rounded-[14px] p-4 flex flex-col gap-1"
+              className="flex-1 bg-danger text-[#14161A] rounded-[14px] p-4 flex flex-col gap-[3px]"
             >
               <span className="font-mono font-medium text-[10px] tracking-[0.12em] opacity-65">WAGER</span>
               <span className="font-bold text-[20px]">2×</span>

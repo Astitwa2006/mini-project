@@ -36,8 +36,8 @@ export function useGameSocket() {
   const startGame   = useCallback(() => emit(SOCKET_EVENTS.GAME_START), [emit]);
   const joinRoom    = useCallback((code) => emit(SOCKET_EVENTS.ROOM_JOIN, { code }), [emit]);
   const leaveRoom   = useCallback(() => emit(SOCKET_EVENTS.ROOM_LEAVE), [emit]);
-  const submitAnswer = useCallback((questionIndex, selectedOption, timeRemainingMs) =>
-    emit(SOCKET_EVENTS.GAME_ANSWER, { questionIndex, selectedOption, timeRemainingMs }), [emit]);
+  const submitAnswer = useCallback((questionIndex, selectedOption, timeRemainingMs, wager, stealTarget) =>
+    emit(SOCKET_EVENTS.GAME_ANSWER, { questionIndex, selectedOption, timeRemainingMs, wager, stealTarget }), [emit]);
   const sendChat    = useCallback((message) => emit(SOCKET_EVENTS.CHAT_MESSAGE, { message }), [emit]);
   const createRoom  = useCallback((opts) => emit(SOCKET_EVENTS.ROOM_CREATE, opts), [emit]);
 

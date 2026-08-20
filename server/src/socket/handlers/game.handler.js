@@ -53,6 +53,9 @@ export function registerGameHandlers(io, socket) {
         correctAnswer: result.correctAnswer,
         explanation: result.explanation,
         credit:      result.credit,
+        stealArmed:  result.stealArmed,
+        timeRemainingMs: result.timeRemainingMs,
+        timeLimitMs: result.timeLimitMs,
       });
     } catch (err) {
       socket.emit('error', { event: 'game:answer', message: err.message });

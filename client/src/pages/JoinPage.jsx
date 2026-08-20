@@ -4,22 +4,14 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { api } from '../services/api.js';
 import { useGameSocket } from '../hooks/useGameSocket.js';
 import { useGame } from '../context/GameContext.jsx';
-import { SOCKET_EVENTS } from '../utils/constants.js';
+import { SOCKET_EVENTS, TILE_COLORS } from '../utils/constants.js';
 import { useSocket } from '../context/SocketContext.jsx';
 import Loader from '../components/ui/Loader.jsx';
-
-const AVATARS = [
-  { color: 'bg-accent', icon: '🤓' },
-  { color: 'bg-danger', icon: '👽' },
-  { color: 'bg-surface-sand', icon: '🤖' },
-  { color: 'bg-surface-blue', icon: '👻' },
-  { color: 'bg-[#E8E4DA]', icon: '👾' },
-];
 
 export default function JoinPage() {
   const { code } = useParams();
   const navigate  = useNavigate();
-  const { user, loading, signInAsGuest } = useAuth(); // Assume we implement this
+  const { user, loading, signInAsGuest } = useAuth();
   const { socket } = useSocket();
   const { dispatch } = useGame();
   useGameSocket();
@@ -58,17 +50,12 @@ export default function JoinPage() {
       return;
     }
     const finalCode = code || roomCode;
-    
-    // We will implement signInAsGuest in AuthContext which creates a fake session
+
     try {
-      if (signInAsGuest) {
-        await signInAsGuest(nickname.trim(), AVATARS[avatarIndex].icon);
-        navigate(`/join/${finalCode}`);
-      } else {
-        alert("Guest mode requires backend updates. Please use Google Login for now!");
-      }
+      await signInAsGuest(nickname.trim(), TILE_COLORS[avatarIndex]);
+      navigate(`/join/${finalCode}`);
     } catch (e) {
-      alert(e.message);
+      alert(e.message || 'Could not join as a guest — try again, or log in instead.');
     }
   };
 
@@ -114,17 +101,18 @@ export default function JoinPage() {
             />
           </div>
 
-          {/* Avatar Picker */}
+          {/* Tile Colour Picker */}
           <div className="flex flex-col gap-3">
-            <span className="font-mono font-medium text-[10px] tracking-[0.1em] text-text-muted">PICK AN AVATAR</span>
+            <span className="font-mono font-medium text-[10px] tracking-[0.1em] text-text-muted">TILE COLOUR</span>
             <div className="flex items-center gap-3">
-              {AVATARS.map((avatar, i) => (
-                <button 
-                  key={i}
+              {TILE_COLORS.map((color, i) => (
+                <button
+                  key={color}
                   onClick={() => setAvatarIndex(i)}
-                  className={`w-[48px] h-[48px] rounded-[14px] ${avatar.color} flex items-center justify-center text-2xl transition-transform ${avatarIndex === i ? 'scale-110 ring-2 ring-border-heavy ring-offset-2 ring-offset-bg' : 'opacity-70 hover:opacity-100 shadow-sm'}`}
+                  style={{ background: color }}
+                  className={`w-[48px] h-[48px] rounded-[14px] flex items-center justify-center text-2xl transition-transform ${avatarIndex === i ? 'scale-110 ring-2 ring-border-heavy ring-offset-2 ring-offset-bg' : 'opacity-70 hover:opacity-100 shadow-sm'}`}
                 >
-                  {avatar.icon}
+                  {avatarIndex === i && <span className="text-[#14161A] font-bold text-sm">{(nickname || '??').slice(0, 2).toUpperCase()}</span>}
                 </button>
               ))}
             </div>

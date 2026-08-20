@@ -35,3 +35,13 @@ export function msToCountdown(ms) {
   const s = Math.max(0, Math.ceil(ms / 1000));
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 }
+
+/** Longest run of consecutive `correct: true` entries, in order. */
+export function longestStreak(history = []) {
+  let best = 0, current = 0;
+  for (const entry of history) {
+    current = entry.correct ? current + 1 : 0;
+    if (current > best) best = current;
+  }
+  return best;
+}

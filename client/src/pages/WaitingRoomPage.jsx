@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useGame } from '../context/GameContext.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
+import { useTheme } from '../context/ThemeContext.jsx';
 import { useGameSocket } from '../hooks/useGameSocket.js';
-import { GAME_PHASE } from '../utils/constants.js';
+import { GAME_PHASE, TOPICS } from '../utils/constants.js';
 import { buildShareUrl } from '../utils/helpers.js';
 
 const AVATAR_COLORS = ['bg-accent', 'bg-danger', 'bg-surface-sand', 'bg-surface-blue', 'bg-surface-base'];
@@ -13,6 +14,7 @@ export default function WaitingRoomPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { room, phase } = useGame();
+  const { isDark, setLight, setDark } = useTheme();
   const { startGame, leaveRoom } = useGameSocket();
 
   const isHost = room?.hostId === user?.id;
@@ -44,9 +46,15 @@ export default function WaitingRoomPage() {
           >
             ← Leave
           </button>
-          <span className="font-mono font-medium text-[11px] tracking-[0.1em] text-text-muted">
-            HOST: {hostPlayer?.username || 'unknown'}
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="font-mono font-medium text-[11px] tracking-[0.1em] text-text-muted">
+              HOST: {hostPlayer?.username || 'unknown'}
+            </span>
+            <div className="flex items-center bg-black/[0.07] dark:bg-white/[0.07] rounded-full p-[3px]">
+              <span onClick={setLight} className={`px-2 py-[3px] rounded-full text-[11px] cursor-pointer ${!isDark ? 'bg-surface-base text-text font-semibold shadow-sm' : 'font-medium text-text-muted'}`}>Light</span>
+              <span onClick={setDark} className={`px-2 py-[3px] rounded-full text-[11px] cursor-pointer ${isDark ? 'bg-surface-base text-text font-semibold shadow-sm' : 'font-medium text-text-muted'}`}>Dark</span>
+            </div>
+          </div>
         </div>
 
         {/* Code Box */}
@@ -73,11 +81,13 @@ export default function WaitingRoomPage() {
             {room.questionCount} questions
           </span>
           <span className="font-mono font-medium text-[11px] text-text bg-surface-base border border-border rounded-full px-3 py-1.5 shadow-sm">
-            10s each
+            {room.questionTimeSeconds || 10}s each
           </span>
-          <span className="font-mono font-medium text-[11px] text-[#0B0D10] bg-danger rounded-full px-3 py-1.5">
-            {room.topics?.[0] || 'Any'}
-          </span>
+          {(room.topics?.length ? room.topics : ['startups']).map((slug) => (
+            <span key={slug} className="font-mono font-medium text-[11px] text-[#0B0D10] bg-danger rounded-full px-3 py-1.5">
+              {TOPICS[slug]?.label || slug}
+            </span>
+          ))}
         </div>
 
         {/* Players List */}
@@ -94,14 +104,17 @@ export default function WaitingRoomPage() {
               const pHost = p.id === room.hostId;
               const initials = p.username ? p.username.substring(0, 2).toUpperCase() : '??';
               const colorClass = AVATAR_COLORS[i % AVATAR_COLORS.length];
-              
+
               return (
-                <div key={p.id} className="flex items-center gap-3 bg-surface-base border border-border rounded-xl px-3.5 py-3 shadow-sm">
-                  <div className={`w-[34px] h-[34px] rounded-[10px] ${colorClass} text-[#0B0D10] border border-border-heavy flex items-center justify-center font-bold text-sm`}>
+                <div key={p.id} className={`flex items-center gap-3 border rounded-xl px-3.5 py-3 shadow-sm ${isMe ? 'bg-accent/10 border-accent/40' : 'bg-surface-base border-border'}`}>
+                  <div
+                    className={`w-[34px] h-[34px] rounded-[10px] text-[#0B0D10] border border-border-heavy flex items-center justify-center font-bold text-sm ${p.tileColor ? '' : colorClass}`}
+                    style={p.tileColor ? { background: p.tileColor } : undefined}
+                  >
                     {initials}
                   </div>
                   <span className="flex-1 font-medium text-[15px]">
-                    {p.username || 'Guest'}
+                    {p.username || 'Guest'}{isMe ? ' (you)' : ''}
                     {pHost && <span className="ml-2 font-mono font-medium text-[10px] text-text-muted tracking-[0.08em]">HOST</span>}
                   </span>
                   <span className="font-mono font-medium text-[11px] text-surface-inverted dark:text-accent">

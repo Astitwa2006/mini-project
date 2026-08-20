@@ -56,4 +56,17 @@ export const GAME_PHASE = {
   FINISHED: 'finished',
 };
 
+// Avatar tile colors — picked at onboarding, shown wherever a player's tile
+// renders (roster, standings, podium). Same palette used across the app.
+export const TILE_COLORS = ['#C8FF4D', '#FF7A66', '#8FD6FF', '#E8E4DA', '#B9A6FF'];
+
+// Answer-format labels, keyed by the `type` field questions carry end-to-end.
+export const FORMAT_LABELS = {
+  single:  'Single',
+  multi:   'Multi',
+  rank:    'Rank',
+  swipe:   'Swipe',
+  'type-in': 'Type-in',
+};
+
 export const API_BASE = import.meta.env.VITE_API_URL || '/api';

@@ -6,7 +6,7 @@ export default function AnswerSwipe({ onSelect, selectedOption, correctAnswer, r
   
   return (
     <div className="flex gap-4 mt-2">
-      {options.map((opt, i) => {
+      {options.map((opt) => {
         const isSelected = selectedOption === opt;
         const isCorrect  = revealed && opt === correctAnswer;
         const isWrong    = revealed && isSelected && opt !== correctAnswer;

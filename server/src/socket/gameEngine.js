@@ -15,8 +15,9 @@ export const PHASE = {
   FINISHED:  'finished',
 };
 
-const REVEAL_DURATION_MS  = 3000;  // 3s to show correct answer before next Q
-const QUESTION_TIME_MS    = env.QUESTION_TIME_LIMIT_SECONDS * 1000;
+const REVEAL_DURATION_MS     = 3000;  // 3s to show correct answer before next Q
+const STANDINGS_PAUSE_MS     = 4500;  // extra breathing room on the halfway standings screen
+const DEFAULT_QUESTION_TIME_MS = env.QUESTION_TIME_LIMIT_SECONDS * 1000;
 
 /**
  * Starts a game for the given room.
@@ -27,6 +28,9 @@ const QUESTION_TIME_MS    = env.QUESTION_TIME_LIMIT_SECONDS * 1000;
 export async function startGame(io, room) {
   const { id: roomId, code, topics, questionCount, difficulty } = room;
   const socketRoom = `room:${roomId}`;
+  const questionTimeMs = room.questionTimeSeconds
+    ? room.questionTimeSeconds * 1000
+    : DEFAULT_QUESTION_TIME_MS;
 
   try {
     // Lock questions — all players will receive the same set
@@ -46,11 +50,16 @@ export async function startGame(io, room) {
     // Notify all players: game is starting
     io.to(socketRoom).emit('game:starting', {
       totalQuestions: questions.length,
-      questionTime:   env.QUESTION_TIME_LIMIT_SECONDS,
+      questionTime:   questionTimeMs / 1000,
       topics,
     });
 
     await sleep(3000); // 3s countdown before first question
+
+    // Halfway point gets an extended pause with a standings screen instead
+    // of rushing straight into the next question — only meaningful for
+    // games long enough to have a real "halfway".
+    const halfwayIndex = questions.length >= 4 ? Math.floor(questions.length / 2) - 1 : -1;
 
     // ── Question loop ──────────────────────────────────────────────
     for (let i = 0; i < questions.length; i++) {
@@ -68,14 +77,15 @@ export async function startGame(io, room) {
         index:          i,
         total:          questions.length,
         question:       q.question,
+        type:           q.type,
         options:        q.options,
         topic:          q.topic,
         difficulty:     q.difficulty,
-        timeLimitMs:    QUESTION_TIME_MS,
+        timeLimitMs:    questionTimeMs,
       });
 
       // Wait for time limit or all players answering
-      await waitForAnswers(io, socketRoom, roomId, i, QUESTION_TIME_MS);
+      await waitForAnswers(io, socketRoom, roomId, i, questionTimeMs);
 
       // ── Reveal phase ─────────────────────────────────────────────
       await resolveRoundModifiers(roomId, i);
@@ -87,10 +97,15 @@ export async function startGame(io, room) {
         leaderboard,
       });
 
+      // Same reveal duration for every question first, so the rhythm stays
+      // consistent — the halfway standings screen gets its own extra pause
+      // AFTER the score update, once the client has actually switched to it.
       await sleep(REVEAL_DURATION_MS);
 
-      // Broadcast score update
-      io.to(socketRoom).emit('game:score_update', { leaderboard });
+      const isHalfway = i === halfwayIndex;
+      io.to(socketRoom).emit('game:score_update', { leaderboard, isHalfway });
+
+      if (isHalfway) await sleep(STANDINGS_PAUSE_MS);
     }
 
     // ── Game finished ─────────────────────────────────────────────

@@ -11,12 +11,18 @@ export function registerRoomHandlers(io, socket) {
   const { user } = socket.data; // set by auth middleware
 
   // ── Create Room ──────────────────────────────────────────────────
-  socket.on('room:create', async ({ topics, questionCount, difficulty, maxPlayers }) => {
+  socket.on('room:create', async ({ topics, questionCount, difficulty, maxPlayers, questionTimeSeconds }) => {
     try {
       const count = Math.min(
         Math.max(questionCount || env.DEFAULT_QUESTIONS_PER_GAME, 5),
         env.MAX_QUESTIONS_PER_GAME
       );
+      // Only a few fixed choices are offered client-side — clamp instead of
+      // trusting the raw number so a tampered payload can't shrink/inflate
+      // the timer past what the UI ever actually offers.
+      const seconds = [5, 10, 20].includes(questionTimeSeconds)
+        ? questionTimeSeconds
+        : env.QUESTION_TIME_LIMIT_SECONDS;
 
       const room = await createRoom({
         hostId:        user.id,
@@ -24,12 +30,14 @@ export function registerRoomHandlers(io, socket) {
         questionCount: count,
         difficulty:    difficulty || 'any',
         maxPlayers:    maxPlayers || 8,
+        questionTimeSeconds: seconds,
       });
 
       await addPlayerToRoom(room.id, {
         id:        user.id,
         username:  user.username,
         avatarUrl: user.avatar_url,
+        tileColor: user.tile_color,
         isHost:    true,
       });
 
@@ -65,6 +73,7 @@ export function registerRoomHandlers(io, socket) {
         id:        user.id,
         username:  user.username,
         avatarUrl: user.avatar_url,
+        tileColor: user.tile_color,
         isHost:    false,
       });
 

@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 
 export default function AnswerRank({ options = [], onSelect, selectedOrder, correctAnswer, revealed, disabled }) {
   const [items, setItems] = useState([]);
-  
+
   useEffect(() => {
-    if (selectedOrder) setItems(selectedOrder);
-    else if (options.length > 0 && items.length === 0) setItems([...options]);
+    if (selectedOrder) { setItems(selectedOrder); return; }
+    if (options.length > 0) setItems((prev) => (prev.length === 0 ? [...options] : prev));
   }, [options, selectedOrder]);
 
   const moveItem = (index, dir) => {

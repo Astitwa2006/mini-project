@@ -4,17 +4,27 @@ import { supabaseAdmin } from '../config/supabase.js';
 
 const router = Router();
 
-// Upsert profile after Google OAuth (called by client after sign-in)
+// Upsert profile after Google OAuth (called by client after sign-in), and
+// again after the onboarding step to save nickname/tile-color/topic-follows.
 router.post('/profile', requireAuth, async (req, res, next) => {
   try {
-    const { username } = req.body;
+    const { username, tileColor, favTopics, onboarded } = req.body;
+    const patch = {
+      id:          req.user.id,
+      avatar_url:  req.user.user_metadata?.avatar_url || null,
+    };
+    // Only touch these columns when the caller actually sent them, so the
+    // plain post-login upsert (no body) never resets a nickname the user
+    // already chose back to the auto-generated default — the on-signup DB
+    // trigger already seeds a starting username for brand-new profiles.
+    if (username  !== undefined) patch.username  = username || req.user.email?.split('@')[0];
+    if (tileColor !== undefined) patch.tile_color = tileColor;
+    if (favTopics !== undefined) patch.fav_topics = favTopics;
+    if (onboarded !== undefined) patch.onboarded  = onboarded;
+
     const { data, error } = await supabaseAdmin
       .from('profiles')
-      .upsert({
-        id:          req.user.id,
-        username:    username || req.user.email?.split('@')[0],
-        avatar_url:  req.user.user_metadata?.avatar_url || null,
-      }, { onConflict: 'id' })
+      .upsert(patch, { onConflict: 'id' })
       .select()
       .single();
 

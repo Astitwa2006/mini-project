@@ -15,7 +15,7 @@ export default function AnswerMulti({ options = [], onSelect, selectedOptions, c
   
   return (
     <div className="flex flex-col gap-2 mt-0.5">
-      {options.map((opt, i) => {
+      {options.map((opt) => {
         const letter = opt.charAt(0);
         const text = opt.slice(3);
         const isSelected = selected.includes(letter);

@@ -9,19 +9,20 @@ const ROOM_TTL = 7200; // 2 hours
 /**
  * Creates a new room in Supabase and caches its state in Redis.
  */
-export async function createRoom({ hostId, topics, questionCount, difficulty, maxPlayers = 8 }) {
+export async function createRoom({ hostId, topics, questionCount, difficulty, maxPlayers = 8, questionTimeSeconds }) {
   const code = generateRoomCode();
 
   const { data: room, error } = await supabaseAdmin
     .from('rooms')
     .insert({
       code,
-      host_id:        hostId,
+      host_id:              hostId,
       topics,
-      question_count: questionCount,
+      question_count:       questionCount,
       difficulty,
-      max_players:    maxPlayers,
-      status:         'waiting',
+      max_players:          maxPlayers,
+      question_time_seconds: questionTimeSeconds,
+      status:               'waiting',
     })
     .select()
     .single();
@@ -37,11 +38,13 @@ export async function createRoom({ hostId, topics, questionCount, difficulty, ma
     questionCount,
     difficulty,
     maxPlayers,
+    questionTimeSeconds,
     status:        'waiting',
     players:       [],
     currentQuestion: 0,
     scores:        {},
     correctCounts: {},
+    stealsUsed:    {},
     shareUrl:      `${env.CLIENT_URL}/join/${code}`,
   };
 

@@ -13,6 +13,8 @@ const initialState = {
   totalQuestions:  0,
   questionTime:    30,
   chat:            [],
+  history:         [],         // [{ type, question, correct, points }] — one per revealed question this game
+  isHalfway:       false,      // true while the mid-game standings screen should show
 };
 
 function gameReducer(state, action) {
@@ -34,6 +36,8 @@ function gameReducer(state, action) {
         myAnswer:       null,
         reveal:         null,
         leaderboard:    [],
+        history:        [],
+        isHalfway:      false,
       };
     case 'NEW_QUESTION':
       return {
@@ -42,13 +46,29 @@ function gameReducer(state, action) {
         currentQuestion: action.payload,
         myAnswer:        null,
         reveal:          null,
+        isHalfway:       false,
       };
     case 'MY_ANSWER':
       return { ...state, myAnswer: action.payload };
     case 'REVEAL':
-      return { ...state, phase: GAME_PHASE.REVEAL, reveal: action.payload };
+      return {
+        ...state,
+        phase:   GAME_PHASE.REVEAL,
+        reveal:  action.payload,
+        history: state.currentQuestion
+          ? [...state.history, {
+              type:     state.currentQuestion.type || 'single',
+              question: state.currentQuestion.question,
+              correct:  !!state.myAnswer?.isCorrect,
+              points:   state.myAnswer?.points || 0,
+              secs: (state.myAnswer?.timeLimitMs != null && state.myAnswer?.timeRemainingMs != null)
+                ? (state.myAnswer.timeLimitMs - state.myAnswer.timeRemainingMs) / 1000
+                : null,
+            }]
+          : state.history,
+      };
     case 'SCORE_UPDATE':
-      return { ...state, leaderboard: action.payload.leaderboard };
+      return { ...state, leaderboard: action.payload.leaderboard, isHalfway: !!action.payload.isHalfway };
     case 'GAME_FINISHED':
       return { ...state, phase: GAME_PHASE.FINISHED, leaderboard: action.payload.leaderboard };
     case 'CHAT_MESSAGE':

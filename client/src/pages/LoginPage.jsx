@@ -30,7 +30,7 @@ export default function LoginPage() {
             LIVE
           </span>
           <span className="font-mono font-normal text-[11px] text-text-muted whitespace-nowrap">
-            14 new questions minted from today's feed
+            14 new questions minted from today&apos;s feed
           </span>
         </div>
 
@@ -46,7 +46,7 @@ export default function LoginPage() {
             Quiz<span className="text-surface-inverted dark:text-accent">Rush</span>
           </h1>
           <p className="m-0 font-normal text-[15px] leading-[1.5] text-text-muted max-w-[280px] text-balance">
-            Tech trivia written from this morning's news. Ten seconds a question. Bring friends.
+            Tech trivia written from this morning&apos;s news. Ten seconds a question. Bring friends.
           </p>
         </div>
 
@@ -64,6 +64,16 @@ export default function LoginPage() {
               <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
             </svg>
             Sign in with Google
+          </button>
+        </div>
+
+        <div className="mt-8 flex flex-col items-center gap-2.5">
+          <span className="font-normal text-[13px] text-text-muted">Just here for one room?</span>
+          <button
+            onClick={() => navigate('/join')}
+            className="font-semibold text-sm text-surface-inverted dark:text-accent hover:underline transition-all"
+          >
+            Join with a code — no account needed
           </button>
         </div>
       </div>

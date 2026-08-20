@@ -48,6 +48,28 @@ export function AuthProvider({ children }) {
     if (error) throw error;
   }
 
+  // Anonymous session for the "join with a code, no account" path. Requires
+  // Anonymous Sign-ins to be enabled in the Supabase project's Auth settings.
+  async function signInAsGuest(nickname, tileColor) {
+    const { data, error } = await supabase.auth.signInAnonymously();
+    if (error) throw error;
+    await handleSession(data.session);
+    const { profile: updated } = await api.upsertProfile({ username: nickname, tileColor, onboarded: true });
+    setProfile(updated);
+  }
+
+  // Re-pulls the profile row after onboarding writes to it, so ProtectedRoute's
+  // `profile.onboarded` check reflects the change without a full reload.
+  async function refreshProfile() {
+    try {
+      const { profile: updated } = await api.getMe();
+      setProfile(updated);
+      return updated;
+    } catch {
+      return profile;
+    }
+  }
+
   async function signOut() {
     await supabase.auth.signOut();
     localStorage.removeItem('sb-token');
@@ -58,7 +80,7 @@ export function AuthProvider({ children }) {
   const token = localStorage.getItem('sb-token');
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, token, signInWithGoogle, signOut }}>
+    <AuthContext.Provider value={{ user, profile, loading, token, signInWithGoogle, signInAsGuest, refreshProfile, signOut }}>
       {children}
     </AuthContext.Provider>
   );

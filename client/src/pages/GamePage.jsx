@@ -1,9 +1,9 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGame } from '../context/GameContext.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useGameSocket } from '../hooks/useGameSocket.js';
-import { GAME_PHASE } from '../utils/constants.js';
+import { GAME_PHASE, TILE_COLORS } from '../utils/constants.js';
 import CountdownTimer from '../components/game/CountdownTimer.jsx';
 import AnswerOptions from '../components/game/AnswerOptions.jsx';
 import AnswerMulti from '../components/game/AnswerMulti.jsx';
@@ -12,21 +12,81 @@ import AnswerSwipe from '../components/game/AnswerSwipe.jsx';
 import AnswerTypeIn from '../components/game/AnswerTypeIn.jsx';
 import { useNavigate } from 'react-router-dom';
 
+function StandingsScreen({ room, leaderboard, myId }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex-1 flex flex-col gap-[18px]"
+    >
+      <div className="flex flex-col gap-1">
+        <span className="font-mono font-medium text-[10px] tracking-[0.16em] text-text-muted uppercase">
+          Halfway · Room {room?.code}
+        </span>
+        <h2 className="m-0 font-bold text-[30px] leading-[1.08] tracking-[-0.03em]">Standings</h2>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        {leaderboard.map((p, i) => {
+          const isMe = p.id === myId;
+          const tile = p.tileColor || TILE_COLORS[i % TILE_COLORS.length];
+          return (
+            <div
+              key={p.id}
+              className={`flex items-center gap-3 rounded-2xl px-3.5 py-3 border ${isMe ? 'bg-surface-inverted text-text-inverted border-surface-inverted' : 'bg-surface-base border-border'}`}
+            >
+              <span className={`font-mono font-bold text-[13px] w-4 ${isMe ? 'opacity-60' : 'text-text-muted opacity-60'}`}>{p.rank}</span>
+              <div className="w-8 h-8 rounded-[10px] flex items-center justify-center font-bold text-[12px] text-[#14161A]" style={{ background: tile }}>
+                {(p.username || '??').slice(0, 2).toUpperCase()}
+              </div>
+              <span className="flex-1 font-semibold text-[15px]">{p.username}{isMe ? ' (you)' : ''}</span>
+              <span className="font-mono font-bold text-[14px]">{p.score.toLocaleString()}</span>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="flex-1 min-h-[10px]" />
+      <div className="flex items-center justify-center gap-2 text-text-muted text-[13px] font-medium pb-2">
+        <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+        Next question soon…
+      </div>
+    </motion.div>
+  );
+}
+
 export default function GamePage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const {
     phase, room, currentQuestion, myAnswer, reveal,
-    totalQuestions, questionTime,
+    totalQuestions, questionTime, leaderboard, isHalfway,
   } = useGame();
 
   const { submitAnswer } = useGameSocket();
   const [timerRunning, setTimerRunning] = useState(false);
   const [startTime, setStartTime] = useState(null);
-  
+
   // Modifiers
   const [wager, setWager] = useState(false);
   const [stealTarget, setStealTarget] = useState(null);
+  const [stealPickerOpen, setStealPickerOpen] = useState(false);
+  const [stealUsed, setStealUsed] = useState(false);
+
+  // Wager/steal-target choices are per-question — clear them the moment a
+  // new question arrives instead of letting a stale choice silently carry
+  // into the next round.
+  useEffect(() => {
+    setWager(false);
+    setStealTarget(null);
+    setStealPickerOpen(false);
+  }, [currentQuestion?.index]);
+
+  // Each player only gets one steal for the whole game (enforced
+  // server-side) — once we see it register, stop offering the button.
+  useEffect(() => {
+    if (myAnswer?.stealArmed) setStealUsed(true);
+  }, [myAnswer?.stealArmed]);
 
   const handleTimerStart = useCallback(() => {
     setTimerRunning(true);
@@ -51,6 +111,7 @@ export default function GamePage() {
 
   // Find my current score
   const myScore = room?.players?.find(p => p.id === user?.id)?.score || 0;
+  const opponents = (room?.players || []).filter(p => p.id !== user?.id);
 
   return (
     <div className="min-h-screen box-border bg-bg text-text flex flex-col font-sans">
@@ -69,8 +130,13 @@ export default function GamePage() {
         </motion.div>
       )}
 
+      {/* Halfway standings interlude — takes over the reveal window once the server flags it */}
+      {phase === GAME_PHASE.REVEAL && isHalfway && (
+        <StandingsScreen room={room} leaderboard={leaderboard} myId={user?.id} />
+      )}
+
       {/* Question */}
-      {(phase === GAME_PHASE.QUESTION || phase === GAME_PHASE.REVEAL) && currentQuestion && (
+      {(phase === GAME_PHASE.QUESTION || (phase === GAME_PHASE.REVEAL && !isHalfway)) && currentQuestion && (
         <>
           {/* Top Bar (Progress) */}
           <div className="flex items-center justify-between gap-3">
@@ -91,7 +157,7 @@ export default function GamePage() {
 
           {/* Reveal feedback banner (if phase === REVEAL) */}
           {phase === GAME_PHASE.REVEAL && myAnswer && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               className={`rounded-[18px] p-[22px] flex flex-col gap-1.5 ${myAnswer.isCorrect ? 'bg-accent text-[#0B0D10]' : 'bg-danger text-[#0B0D10]'}`}
@@ -100,10 +166,12 @@ export default function GamePage() {
                 {myAnswer.isCorrect ? 'CORRECT' : 'INCORRECT'}
               </span>
               <span className="font-bold text-[40px] leading-none tracking-[-0.03em]">
-                {myAnswer.points > 0 ? `+${myAnswer.points}` : '0'}
+                {myAnswer.points > 0 ? `+${myAnswer.points}` : myAnswer.points}
               </span>
               <span className="font-medium text-[13px] opacity-70">
-                {myAnswer.isCorrect ? 'Great speed' : 'Better luck next time'}
+                {myAnswer.wager && (myAnswer.isCorrect ? 'Wager doubled' : 'Wager lost')}
+                {!myAnswer.wager && (myAnswer.isCorrect ? 'Great speed' : 'Better luck next time')}
+                {myAnswer.stealArmed && ' · steal attempted — check the leaderboard'}
               </span>
             </motion.div>
           )}
@@ -138,23 +206,48 @@ export default function GamePage() {
               {currentQuestion.type || 'single'}
             </span>
           </div>
-          
+
           {/* Modifiers (Wager & Steal) */}
           {phase === GAME_PHASE.QUESTION && !myAnswer && (
-             <div className="flex gap-2 mt-2 mb-2">
-                <button 
-                  onClick={() => setWager(!wager)}
-                  className={`flex-1 h-12 rounded-xl border flex items-center justify-center gap-2 font-medium text-[13px] transition-colors ${wager ? 'bg-[#FF7A66] text-[#14161A] border-[#FF7A66]' : 'bg-transparent text-text border-border-heavy hover:bg-surface-alt'}`}
-                >
-                  <span className="font-mono text-[10px] opacity-60">WAGER</span> 2×
-                </button>
-                {/* Simplified Steal: target a random opponent (or just mark intent if we don't have a specific dropdown yet) */}
-                <button 
-                  onClick={() => setStealTarget(stealTarget ? null : (room.players.find(p => p.id !== user.id)?.id || 'random'))}
-                  className={`flex-1 h-12 rounded-xl border flex items-center justify-center gap-2 font-medium text-[13px] transition-colors ${stealTarget ? 'bg-[#C8FF4D] text-[#14161A] border-[#C8FF4D]' : 'bg-transparent text-text border-border-heavy hover:bg-surface-alt'}`}
-                >
-                  <span className="font-mono text-[10px] opacity-60">STEAL</span>
-                </button>
+             <div className="flex flex-col gap-2 mt-2 mb-2">
+               <div className="flex gap-2">
+                  <button
+                    onClick={() => setWager(!wager)}
+                    className={`flex-1 h-12 rounded-xl border flex items-center justify-center gap-2 font-medium text-[13px] transition-colors ${wager ? 'bg-[#FF7A66] text-[#14161A] border-[#FF7A66]' : 'bg-transparent text-text border-border-heavy hover:bg-surface-alt'}`}
+                  >
+                    <span className="font-mono text-[10px] opacity-60">WAGER</span> 2× / lose it
+                  </button>
+                  {opponents.length > 0 && (
+                    <button
+                      onClick={() => stealUsed ? null : (stealTarget ? setStealTarget(null) : setStealPickerOpen(o => !o))}
+                      disabled={stealUsed}
+                      className={`flex-1 h-12 rounded-xl border flex items-center justify-center gap-2 font-medium text-[13px] transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${stealTarget ? 'bg-[#C8FF4D] text-[#14161A] border-[#C8FF4D]' : 'bg-transparent text-text border-border-heavy hover:bg-surface-alt'}`}
+                    >
+                      <span className="font-mono text-[10px] opacity-60">STEAL</span>
+                      {stealUsed ? 'used' : (stealTarget ? opponents.find(p => p.id === stealTarget)?.username : '×1')}
+                    </button>
+                  )}
+               </div>
+               <AnimatePresence>
+                 {stealPickerOpen && !stealTarget && (
+                   <motion.div
+                     initial={{ opacity: 0, height: 0 }}
+                     animate={{ opacity: 1, height: 'auto' }}
+                     exit={{ opacity: 0, height: 0 }}
+                     className="flex flex-wrap gap-2 overflow-hidden"
+                   >
+                     {opponents.map(p => (
+                       <button
+                         key={p.id}
+                         onClick={() => { setStealTarget(p.id); setStealPickerOpen(false); }}
+                         className="px-3 py-2 rounded-lg border border-border-heavy text-[13px] font-medium hover:bg-surface-alt transition-colors"
+                       >
+                         Steal from {p.username}
+                       </button>
+                     ))}
+                   </motion.div>
+                 )}
+               </AnimatePresence>
              </div>
           )}
 
@@ -170,7 +263,6 @@ export default function GamePage() {
                 disabled={!!myAnswer || phase === GAME_PHASE.REVEAL}
               />
             )}
-            {/* We will implement these components next */}
             {currentQuestion.type === 'multi' && (
               <AnswerMulti
                 options={currentQuestion.options}
@@ -225,7 +317,7 @@ export default function GamePage() {
 
           {/* Reveal Source Article Box (if reveal) */}
           {phase === GAME_PHASE.REVEAL && reveal?.explanation && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               className="border border-border-heavy rounded-[16px] overflow-hidden bg-surface-alt mt-2"

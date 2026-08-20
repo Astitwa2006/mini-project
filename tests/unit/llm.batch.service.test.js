@@ -6,9 +6,9 @@ const mockGenerateContent = jest.fn().mockResolvedValue({
   response: {
     text: () => JSON.stringify({
       questions: [
-        { index: 1, question: 'Q1?', options: ['A. one', 'B. two', 'C. three', 'D. four'], correct: 'A', explanation: 'because', difficulty: 'easy',   topic: 'web-dev' },
-        { index: 2, question: 'Q2?', options: ['A. one', 'B. two', 'C. three', 'D. four'], correct: 'B', explanation: 'because', difficulty: 'medium', topic: 'web-dev' },
-        { index: 3, question: 'Q3?', options: ['A. one', 'B. two', 'C. three', 'D. four'], correct: 'C', explanation: 'because', difficulty: 'hard',   topic: 'web-dev' },
+        { index: 1, question: 'Q1?', type: 'single', options: ['A. one', 'B. two', 'C. three', 'D. four'], correct: 'A', explanation: 'because', difficulty: 'easy',   topic: 'web-dev' },
+        { index: 2, question: 'Q2?', type: 'single', options: ['A. one', 'B. two', 'C. three', 'D. four'], correct: 'B', explanation: 'because', difficulty: 'medium', topic: 'web-dev' },
+        { index: 3, question: 'Q3?', type: 'single', options: ['A. one', 'B. two', 'C. three', 'D. four'], correct: 'C', explanation: 'because', difficulty: 'hard',   topic: 'web-dev' },
       ],
     }),
   },

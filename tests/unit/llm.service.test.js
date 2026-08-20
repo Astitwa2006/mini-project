@@ -7,6 +7,7 @@ jest.unstable_mockModule('../../server/src/config/llm.js', () => ({
       response: {
         text: () => JSON.stringify({
           question:    'What does WebAssembly (Wasm) primarily enable in browsers?',
+          type:        'single',
           options:     ['A. Server-side rendering', 'B. Near-native performance for compiled code', 'C. CSS animations', 'D. Database queries'],
           correct:     'B',
           explanation: 'WebAssembly allows code written in languages like C/C++/Rust to run at near-native speed in the browser.',

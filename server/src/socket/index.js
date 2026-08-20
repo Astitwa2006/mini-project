@@ -29,7 +29,7 @@ export function createSocketServer(httpServer) {
     // Fetch extended profile
     const { data: profile } = await supabase
       .from('profiles')
-      .select('id, username, avatar_url')
+      .select('id, username, avatar_url, tile_color')
       .eq('id', data.user.id)
       .single();
 
@@ -38,6 +38,7 @@ export function createSocketServer(httpServer) {
       email:      data.user.email,
       username:   profile?.username || data.user.email?.split('@')[0],
       avatar_url: profile?.avatar_url || data.user.user_metadata?.avatar_url,
+      tile_color: profile?.tile_color,
     };
 
     next();

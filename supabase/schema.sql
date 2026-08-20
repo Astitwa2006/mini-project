@@ -135,3 +135,11 @@ create index idx_scores_session       on public.scores(session_id);
 create index idx_scores_user          on public.scores(user_id);
 create index idx_chat_room            on public.chat_messages(room_id);
 create index idx_profiles_total_score on public.profiles(total_score desc);
+
+-- ── Migrations ───────────────────────────────────────────────────
+-- Added after the initial schema for the nickname/avatar-tile/topic-follow
+-- onboarding step and the host-configurable seconds-per-question. Safe to
+-- re-run against an existing database — every statement is idempotent.
+alter table public.profiles add column if not exists tile_color text;
+alter table public.profiles add column if not exists onboarded boolean not null default false;
+alter table public.rooms    add column if not exists question_time_seconds int not null default 30;

@@ -1,25 +1,12 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
+import { useTheme } from '../context/ThemeContext.jsx';
 import { motion } from 'framer-motion';
 
 export default function LandingPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  
-  const [isDark, setIsDark] = useState(
-    document.documentElement.classList.contains('dark')
-  );
-
-  const toggleTheme = (dark) => {
-    if (dark) {
-      document.documentElement.classList.add('dark');
-      setIsDark(true);
-    } else {
-      document.documentElement.classList.remove('dark');
-      setIsDark(false);
-    }
-  };
+  const { isDark, setLight, setDark } = useTheme();
 
   return (
     <div className="min-h-screen bg-bg text-text font-sans flex flex-col">
@@ -37,19 +24,19 @@ export default function LandingPage() {
         {/* Right nav */}
         <div className="flex items-center gap-7 font-medium text-sm text-text-muted">
           <span className="cursor-pointer hover:text-text transition-colors">How it works</span>
-          <span className="cursor-pointer hover:text-text transition-colors">Today's feed</span>
+          <span className="cursor-pointer hover:text-text transition-colors">Today&apos;s feed</span>
           <span className="cursor-pointer hover:text-text transition-colors">Leaderboards</span>
 
           {/* Theme toggle */}
           <div className="flex items-center bg-black/[0.07] dark:bg-white/[0.07] rounded-full p-[3px]">
             <span
-              onClick={() => toggleTheme(false)}
+              onClick={setLight}
               className={`px-[11px] py-[5px] rounded-full text-[12px] transition-all cursor-pointer ${!isDark ? 'bg-surface-base text-text font-semibold shadow-sm' : 'font-medium text-text-muted hover:text-text'}`}
             >
               Light
             </span>
             <span
-              onClick={() => toggleTheme(true)}
+              onClick={setDark}
               className={`px-[11px] py-[5px] rounded-full text-[12px] transition-all cursor-pointer ${isDark ? 'bg-surface-base text-text font-semibold shadow-sm' : 'font-medium text-text-muted hover:text-text'}`}
             >
               Dark

@@ -22,13 +22,13 @@ export default function LobbyPage() {
   const [topics, setTopics] = useState(['startups']);
   const [questionCount, setQuestionCount] = useState(10);
   const [difficulty, setDifficulty] = useState('any');
-  const [maxPlayers, setMaxPlayers] = useState(8);
+  const [questionTimeSeconds, setQuestionTimeSeconds] = useState(10);
 
   function handleCreateRoom() {
     if (!topics.length) return;
     setCreating(true);
 
-    createRoom({ topics, questionCount, difficulty, maxPlayers });
+    createRoom({ topics, questionCount, difficulty, maxPlayers: 8, questionTimeSeconds });
 
     socket.once(SOCKET_EVENTS.ROOM_CREATED, (roomData) => {
       dispatch({ type: 'SET_ROOM', payload: roomData });
@@ -59,6 +59,7 @@ export default function LobbyPage() {
         </div>
         <div className="flex items-center gap-4">
           <span className="text-text-muted text-sm hidden sm:block">{profile?.username || user?.email}</span>
+          <button onClick={() => navigate('/profile')} className="font-medium text-sm text-text-muted hover:text-text">Profile</button>
           <button onClick={signOut} className="font-medium text-sm text-text-muted hover:text-text">Sign out</button>
         </div>
       </nav>
@@ -92,7 +93,7 @@ export default function LobbyPage() {
             <div className="space-y-3">
               <span className="text-text-muted font-mono tracking-widest text-[10px] block">DIFFICULTY</span>
               <div className="flex gap-2">
-                {Object.entries(DIFFICULTY).map(([key, { label, color }]) => (
+                {Object.entries(DIFFICULTY).map(([key, { label }]) => (
                   <button
                     key={key}
                     onClick={() => setDifficulty(key)}
@@ -100,6 +101,22 @@ export default function LobbyPage() {
                       ${difficulty === key ? 'text-text-inverted border-transparent bg-surface-inverted' : 'border-border text-text-muted hover:bg-surface-alt'}`}
                   >
                     {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <span className="text-text-muted font-mono tracking-widest text-[10px] block">SECONDS PER QUESTION</span>
+              <div className="flex gap-2">
+                {[5, 10, 20].map((n) => (
+                  <button
+                    key={n}
+                    onClick={() => setQuestionTimeSeconds(n)}
+                    className={`flex-1 py-2.5 rounded-xl text-sm font-semibold border transition-all
+                      ${questionTimeSeconds === n ? 'text-text-inverted border-transparent bg-surface-inverted' : 'border-border text-text-muted hover:bg-surface-alt'}`}
+                  >
+                    {n}s
                   </button>
                 ))}
               </div>

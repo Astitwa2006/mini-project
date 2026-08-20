@@ -6,6 +6,8 @@ import { logger } from '../utils/logger.js';
 
 const ANSWERS_TTL = 7200;
 const SENT_AT_TTL = 7200;
+const STEALS_PER_GAME = 1;
+const STEAL_AMOUNT = 200;
 
 /**
  * Records the server-side timestamp at which a question was broadcast to a
@@ -52,29 +54,54 @@ export async function recordAnswer({ roomId, questionIndex, playerId, selectedOp
   const serverRemainingMs = sentAt != null ? Math.max(0, timeLimitMs - (Date.now() - sentAt)) : timeRemainingMs;
   const authoritativeRemainingMs = Math.min(Math.max(0, timeRemainingMs), serverRemainingMs);
 
-  let basePoints = credit > 0 ? calculateScore(authoritativeRemainingMs, timeLimitMs) * credit : 0;
-  let points = wager ? basePoints * 2 : basePoints;
+  // The "would-be" score if this answer had been correct, at this speed —
+  // used both for the normal correct-answer payout and as the symmetric
+  // wager risk (double on a correct wager, lose the same amount on a wrong
+  // one, so wagering is an actual bet rather than a free upgrade).
+  const timeBasedScore = calculateScore(authoritativeRemainingMs, timeLimitMs);
+  let basePoints = credit > 0 ? timeBasedScore * credit : 0;
+  let points = wager ? (isCorrect ? basePoints * 2 : -timeBasedScore) : basePoints;
 
-  // Save this player's answer
-  existing[playerId] = { 
-    selectedOption, isCorrect, points, timeRemainingMs: authoritativeRemainingMs, 
-    wager, stealTarget, credit
-  };
-  await cache.set(answersKey, existing, ANSWERS_TTL);
-
-  // Update player score (and correct-answer tally) in room state
-  if (points > 0) {
-    const state = await cache.get(stateKey);
-    if (state) {
-      state.scores[playerId] = (state.scores[playerId] || 0) + points;
-      state.correctCounts = state.correctCounts || {};
-      state.correctCounts[playerId] = (state.correctCounts[playerId] || 0) + 1;
-      await cache.set(stateKey, state, ANSWERS_TTL);
+  // Each player gets one steal attempt per game. The attempt (and its
+  // single use) is consumed here, at answer time, regardless of whether it
+  // ends up succeeding — success depends on the target's own answer and is
+  // resolved later in resolveRoundModifiers, once everyone's answers are in.
+  const state = await cache.get(stateKey);
+  let resolvedStealTarget = null;
+  if (state) {
+    state.stealsUsed = state.stealsUsed || {};
+    if (stealTarget && (state.stealsUsed[playerId] || 0) < STEALS_PER_GAME) {
+      resolvedStealTarget = stealTarget;
+      state.stealsUsed[playerId] = (state.stealsUsed[playerId] || 0) + 1;
     }
   }
 
+  // Save this player's answer
+  existing[playerId] = {
+    selectedOption, isCorrect, points, timeRemainingMs: authoritativeRemainingMs,
+    wager, stealTarget: resolvedStealTarget, credit,
+  };
+  await cache.set(answersKey, existing, ANSWERS_TTL);
+
+  // Update player score (and correct-answer tally) in room state. Points
+  // can be negative (a lost wager) — those must still apply, just floored
+  // so a run of bad luck can't push a player's score below zero.
+  if (state && points !== 0) {
+    state.scores[playerId] = Math.max(0, (state.scores[playerId] || 0) + points);
+    state.correctCounts = state.correctCounts || {};
+    if (isCorrect) state.correctCounts[playerId] = (state.correctCounts[playerId] || 0) + 1;
+    await cache.set(stateKey, state, ANSWERS_TTL);
+  } else if (state) {
+    await cache.set(stateKey, state, ANSWERS_TTL); // persist the stealsUsed increment even if points===0
+  }
+
   logger.debug(`Answer recorded: player=${playerId} q=${questionIndex} correct=${isCorrect} pts=${points}`);
-  return { isCorrect, points, correctAnswer: question.correct, explanation: question.explanation, credit };
+  return {
+    isCorrect, points, correctAnswer: question.correct, explanation: question.explanation, credit,
+    stealArmed: !!resolvedStealTarget,
+    timeRemainingMs: authoritativeRemainingMs,
+    timeLimitMs,
+  };
 }
 
 /**
@@ -90,14 +117,16 @@ export async function resolveRoundModifiers(roomId, questionIndex) {
   ]);
   if (!answers || !state) return;
   
-  // Process steals
+  // Process steals — succeeds only if the stealer answered correctly
+  // themselves AND the target they named got it wrong. Getting it right is
+  // what earns the steal; targeting someone who also got it right doesn't
+  // cost them anything.
   for (const [playerId, ans] of Object.entries(answers)) {
-    if (ans.stealTarget && answers[ans.stealTarget]) {
+    if (ans.stealTarget && ans.isCorrect && answers[ans.stealTarget]) {
        const targetAns = answers[ans.stealTarget];
-       // If target got it wrong (credit 0), steal points
        if (targetAns.credit === 0) {
-          state.scores[playerId] = (state.scores[playerId] || 0) + 200;
-          state.scores[ans.stealTarget] = Math.max(0, (state.scores[ans.stealTarget] || 0) - 200);
+          state.scores[playerId] = (state.scores[playerId] || 0) + STEAL_AMOUNT;
+          state.scores[ans.stealTarget] = Math.max(0, (state.scores[ans.stealTarget] || 0) - STEAL_AMOUNT);
           logger.debug(`Steal successful: ${playerId} stole from ${ans.stealTarget}`);
        }
     }

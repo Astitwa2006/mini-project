@@ -23,6 +23,7 @@
 }
 
 :root {
+  color-scheme: light;
   --color-bg: #F7F5F0;
   --color-text: #14161A;
   --color-border: rgba(20, 22, 26, 0.1);
@@ -35,6 +36,7 @@
 }
 
 .dark {
+  color-scheme: dark;
   --color-bg: #0B0D10;
   --color-text: #EDEAE3;
   --color-border: rgba(255, 255, 255, 0.12);

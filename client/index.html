@@ -1,6 +1,15 @@
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en">
   <head>
+    <script>
+      // Applied synchronously, before first paint, so the page never flashes
+      // the wrong theme while React mounts — must match ThemeContext.jsx's logic exactly.
+      (function () {
+        var stored = localStorage.getItem('qr-theme');
+        var dark = stored ? stored === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (dark) document.documentElement.classList.add('dark');
+      })();
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="QuizRush — Real-time multiplayer tech trivia powered by live news and AI." />

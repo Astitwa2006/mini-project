@@ -53,7 +53,8 @@ export default function GamePage() {
   const myScore = room?.players?.find(p => p.id === user?.id)?.score || 0;
 
   return (
-    <div className="min-h-screen box-border bg-bg text-text flex flex-col font-sans"><div className="max-w-[480px] mx-auto w-full flex-1 flex flex-col px-[22px] pt-[66px] pb-[44px] gap-4">
+    <div className="min-h-screen box-border bg-bg text-text flex flex-col font-sans">
+      <div className="max-w-[480px] mx-auto w-full flex-1 flex flex-col px-[22px] pt-[66px] pb-[44px] gap-4">
       {/* Starting screen */}
       {phase === GAME_PHASE.STARTING && (
         <motion.div
@@ -62,8 +63,7 @@ export default function GamePage() {
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 200 }}
         >
-          <div className="text-[80px]">🚀  </div>
-</div>
+          <div className="text-[80px]">🚀</div>
           <h1 className="font-bold text-4xl text-white">Get Ready!</h1>
           <p className="font-medium text-[#EDEAE3]/60">{totalQuestions} questions · {questionTime}s each</p>
         </motion.div>
@@ -83,13 +83,11 @@ export default function GamePage() {
                 initial={{ width: 0 }}
                 animate={{ width: `${((currentQuestion.index) / totalQuestions) * 100}%` }}
               />
-              </div>
-</div>
+            </div>
             <span className="font-mono font-medium text-[11px] text-accent whitespace-nowrap">
               {myScore.toLocaleString()} pts
             </span>
-            </div>
-</div>
+          </div>
 
           {/* Reveal feedback banner (if phase === REVEAL) */}
           {phase === GAME_PHASE.REVEAL && myAnswer && (
@@ -126,10 +124,8 @@ export default function GamePage() {
                 <span className="font-normal text-[12.5px] leading-[1.4] text-[#EDEAE3]/55 max-w-[200px]">
                   Generated from real-time topic feeds
                 </span>
-                </div>
-</div>
               </div>
-</div>
+            </div>
           )}
 
           {/* Question Text */}
@@ -141,8 +137,7 @@ export default function GamePage() {
             <span className="shrink-0 font-mono font-bold text-[10px] tracking-[0.1em] text-white/40 border border-white/20 rounded-md px-1.5 py-0.5 uppercase">
               {currentQuestion.type || 'single'}
             </span>
-            </div>
-</div>
+          </div>
           
           {/* Modifiers (Wager & Steal) */}
           {phase === GAME_PHASE.QUESTION && !myAnswer && (
@@ -160,8 +155,7 @@ export default function GamePage() {
                 >
                   <span className="font-mono text-[10px] opacity-60">STEAL</span>
                 </button>
-               </div>
-</div>
+             </div>
           )}
 
           {/* Options */}
@@ -218,8 +212,7 @@ export default function GamePage() {
             )}
           </motion.div>
 
-          <div className="flex-1 min-h-[10px]">  </div>
-</div>
+          <div className="flex-1 min-h-[10px]"></div>
 
           {/* Bottom Bar: Answers in (if not reveal) */}
           {phase === GAME_PHASE.QUESTION && (
@@ -227,8 +220,7 @@ export default function GamePage() {
               <span className="font-normal text-[12.5px] text-[#EDEAE3]/50">
                 Waiting for players to answer...
               </span>
-              </div>
-</div>
+            </div>
           )}
 
           {/* Reveal Source Article Box (if reveal) */}

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { motion } from 'framer-motion';
@@ -5,11 +6,25 @@ import { motion } from 'framer-motion';
 export default function LandingPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  
+  const [isDark, setIsDark] = useState(
+    document.documentElement.classList.contains('dark')
+  );
+
+  const toggleTheme = (dark) => {
+    if (dark) {
+      document.documentElement.classList.add('dark');
+      setIsDark(true);
+    } else {
+      document.documentElement.classList.remove('dark');
+      setIsDark(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-bg text-text font-sans flex flex-col">
       {/* Navbar */}
-      <nav className="flex items-center justify-between px-12 py-5 border-b border-border">
+      <nav className="flex items-center justify-between px-10 py-6 max-w-7xl mx-auto w-full">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-[9px] bg-surface-inverted text-accent flex items-center justify-center font-bold text-base">
             Q
@@ -21,8 +36,18 @@ export default function LandingPage() {
           <span className="cursor-pointer hover:text-text">Today's feed</span>
           <span className="cursor-pointer hover:text-text">Leaderboards</span>
           <div className="flex items-center bg-black/5 dark:bg-white/5 rounded-full p-1 cursor-pointer">
-            <span className="px-3 py-1.5 rounded-full bg-surface-base text-text font-semibold text-xs shadow-sm">Light</span>
-            <span className="px-3 py-1.5 font-medium text-xs">Dark</span>
+            <span 
+              onClick={() => toggleTheme(false)}
+              className={`px-3 py-1.5 rounded-full text-xs transition-colors ${!isDark ? 'bg-surface-base text-text font-semibold shadow-sm' : 'font-medium text-text-muted hover:text-text'}`}
+            >
+              Light
+            </span>
+            <span 
+              onClick={() => toggleTheme(true)}
+              className={`px-3 py-1.5 rounded-full text-xs transition-colors ${isDark ? 'bg-surface-base text-text font-semibold shadow-sm' : 'font-medium text-text-muted hover:text-text'}`}
+            >
+              Dark
+            </span>
           </div>
           <button 
             onClick={() => navigate(user ? '/lobby' : '/login')}
